@@ -16,9 +16,6 @@ struct mdo_ui_script_s
   wasmtime_linker_t *linker;
   wasm_module_t *module;
   wasm_instance_t *instance;
-
-  wasm_functype_t *env_abort_functype;
-  wasm_func_t *env_abort_func;
 };
 
 static mdo_result_t
@@ -60,6 +57,34 @@ finalizer_cb (void *env)
 {
 }
 
+static void
+link_function (mdo_ui_script_t *ui_script, const char *module,
+               const char *symbol, wasm_functype_t *functype,
+               wasm_func_callback_with_env_t cb)
+{
+  wasm_name_t module_name;
+  wasm_name_new_from_string (&module_name, module);
+  module_name.size--; /* remove null terminator to avoid Wasmtime linker bug */
+
+  wasm_name_t func_name;
+  wasm_name_new_from_string (&func_name, symbol);
+  func_name.size--; /* remove null terminator to avoid Wasmtime linker bug */
+
+  /* TODO(marceline-cramer): collect created funcs with vector and delete */
+  wasm_func_t *func = wasm_func_new_with_env (ui_script->store, functype, cb,
+                                              ui_script, finalizer_cb);
+
+  wasm_extern_t *func_extern = wasm_func_as_extern (func);
+
+  wasmtime_error_t *error = wasmtime_linker_define (
+      ui_script->linker, &module_name, &func_name, func_extern);
+  if (error)
+    log_wasmtime_error (ui_script, error);
+
+  wasm_name_delete (&module_name);
+  wasm_name_delete (&func_name);
+}
+
 mdo_result_t
 mdo_ui_script_create (mdo_ui_script_t **ui_script,
                       const mdo_allocator_t *alloc)
@@ -96,16 +121,6 @@ mdo_ui_script_create (mdo_ui_script_t **ui_script,
   if (!new_ui_script->linker)
     return LOG_RESULT (wasmtime_error, "failed to create linker");
 
-  wasm_name_t module_name = {
-    .size = 3,
-    .data = "env",
-  };
-
-  wasm_name_t func_name = {
-    .size = 5,
-    .data = "abort",
-  };
-
   wasm_valtype_vec_t params;
   wasm_valtype_vec_new_uninitialized (&params, 4);
 
@@ -115,19 +130,10 @@ mdo_ui_script_create (mdo_ui_script_t **ui_script,
   wasm_valtype_vec_t results;
   wasm_valtype_vec_new_empty (&results);
 
-  new_ui_script->env_abort_functype = wasm_functype_new (&params, &results);
+  /* TODO(marceline-cramer): collect with vector and delete */
+  wasm_functype_t *functype = wasm_functype_new (&params, &results);
 
-  new_ui_script->env_abort_func = wasm_func_new_with_env (
-      new_ui_script->store, new_ui_script->env_abort_functype, env_abort_cb,
-      new_ui_script, finalizer_cb);
-
-  wasm_extern_t *func_extern
-      = wasm_func_as_extern (new_ui_script->env_abort_func);
-
-  wasmtime_error_t *error = wasmtime_linker_define (
-      new_ui_script->linker, &module_name, &func_name, func_extern);
-  if (error)
-    return log_wasmtime_error (new_ui_script, error);
+  link_function (new_ui_script, "env", "abort", functype, env_abort_cb);
 
   return MDO_SUCCESS;
 }
@@ -182,12 +188,6 @@ mdo_ui_script_delete (mdo_ui_script_t *ui_script)
 {
 
   const mdo_allocator_t *alloc = ui_script->alloc;
-
-  if (ui_script->env_abort_func)
-    wasm_func_delete (ui_script->env_abort_func);
-
-  if (ui_script->env_abort_functype)
-    wasm_functype_delete (ui_script->env_abort_functype);
 
   if (ui_script->instance)
     wasm_instance_delete (ui_script->instance);
