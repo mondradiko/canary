@@ -22,3 +22,11 @@ mdo_result_t mdo_ui_ctx_create (mdo_ui_ctx_t **, const mdo_allocator_t *);
  */
 void mdo_ui_ctx_delete (mdo_ui_ctx_t *);
 
+/** @function mdo_ui_ctx_set_renderer
+ */
+
+/** @function mdo_ui_ctx_update
+ */
+
+/** @function mdo_ui_ctx_render
+ */
