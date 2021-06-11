@@ -9,8 +9,7 @@ struct mdo_ui_panel_s
 };
 
 mdo_result_t
-mdo_ui_panel_create (mdo_ui_panel_t **ui_panel, const mdo_allocator_t *alloc,
-                     mdo_ui_script_t *ui_script)
+mdo_ui_panel_create (mdo_ui_panel_t **ui_panel, const mdo_allocator_t *alloc)
 {
   mdo_ui_panel_t *new_ui_panel
       = mdo_allocator_malloc (alloc, sizeof (mdo_ui_panel_t));

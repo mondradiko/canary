@@ -46,6 +46,8 @@ poll_sdl_events (SDL_Window *window, mdo_ui_panel_t *panel)
 int
 run_harness (const char *filename)
 {
+  int error_code = 0;
+
   const mdo_allocator_t *alloc = mdo_default_allocator ();
   mdo_result_t result;
 
@@ -54,51 +56,64 @@ run_harness (const char *filename)
   if (!mdo_result_success (result))
     {
       LOG_ERR ("failed to create UI script");
-      return 1;
+      error_code = 1;
+      goto error;
     }
 
   result = mdo_ui_script_load (ui_script, filename);
   if (!mdo_result_success (result))
     {
       LOG_ERR ("failed to load UI script");
-      mdo_ui_script_delete (ui_script);
-      return 1;
+      error_code = 1;
+      goto error;
     }
 
   mdo_ui_renderer_t *ui_renderer = create_vk_renderer (alloc);
   if (!ui_renderer)
     {
       LOG_ERR ("failed to create UI renderer");
-      mdo_ui_script_delete (ui_script);
-      return 1;
+      error_code = 1;
+      goto error;
     }
 
   mdo_ui_panel_t *panel;
-  result = mdo_ui_panel_create (&panel, alloc, ui_script);
+  result = mdo_ui_panel_create (&panel, alloc);
   if (!mdo_result_success (result))
     {
       LOG_ERR ("failed to create UI panel");
-      mdo_ui_script_delete (ui_script);
-      return 1;
+      error_code = 1;
+      goto error;
+    }
+
+  mdo_ui_panel_key_t panel_key;
+  result = mdo_ui_script_bind_panel (ui_script, panel, &panel_key);
+  if (!mdo_result_success (result))
+    {
+      LOG_ERR ("failed to bind UI panel");
+      error_code = 1;
+      goto error;
     }
 
   SDL_Window *window = create_sdl_window ();
   if (!window)
     {
       LOG_ERR ("failed to create panel window");
-      mdo_ui_renderer_delete (ui_renderer);
-      mdo_ui_script_delete (ui_script);
-      return 1;
+      error_code = 1;
+      goto error;
     }
 
   while (!poll_sdl_events (window, panel))
     ;
 
+error:
   if (window)
     SDL_DestroyWindow (window);
 
   if (panel)
-    mdo_ui_panel_delete (panel);
+    {
+      mdo_ui_script_unbind_panel (ui_script, panel_key);
+      mdo_ui_panel_delete (panel);
+    }
 
   if (ui_renderer)
     mdo_ui_renderer_delete (ui_renderer);
@@ -106,7 +121,7 @@ run_harness (const char *filename)
   if (ui_script)
     mdo_ui_script_delete (ui_script);
 
-  return 0;
+  return error_code;
 }
 
 int
