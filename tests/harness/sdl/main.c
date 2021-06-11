@@ -51,7 +51,11 @@ run_harness (const char *filename)
   const mdo_allocator_t *alloc = mdo_default_allocator ();
   mdo_result_t result;
 
-  mdo_ui_script_t *ui_script;
+  mdo_ui_script_t *ui_script = NULL;
+  mdo_ui_panel_t *panel = NULL;
+  mdo_ui_renderer_t *ui_renderer = NULL;
+  SDL_Window *window = NULL;
+
   result = mdo_ui_script_create (&ui_script, alloc);
   if (!mdo_result_success (result))
     {
@@ -68,7 +72,7 @@ run_harness (const char *filename)
       goto error;
     }
 
-  mdo_ui_renderer_t *ui_renderer = create_vk_renderer (alloc);
+  ui_renderer = create_vk_renderer (alloc);
   if (!ui_renderer)
     {
       LOG_ERR ("failed to create UI renderer");
@@ -76,7 +80,6 @@ run_harness (const char *filename)
       goto error;
     }
 
-  mdo_ui_panel_t *panel;
   result = mdo_ui_panel_create (&panel, alloc);
   if (!mdo_result_success (result))
     {
@@ -94,7 +97,7 @@ run_harness (const char *filename)
       goto error;
     }
 
-  SDL_Window *window = create_sdl_window ();
+  window = create_sdl_window ();
   if (!window)
     {
       LOG_ERR ("failed to create panel window");
