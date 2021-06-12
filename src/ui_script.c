@@ -1,7 +1,10 @@
 #include "ui_script.h"
 
 #include <stdio.h>
+#include <string.h> /* for strlen, strncmp */
 #include <wasmtime.h>
+
+#include "ui_panel.h"
 
 struct mdo_ui_script_s
 {
@@ -14,8 +17,20 @@ struct mdo_ui_script_s
   wasm_store_t *store;
 
   wasmtime_linker_t *linker;
+
   wasm_module_t *module;
+  wasm_exporttype_vec_t export_types;
+
   wasm_instance_t *instance;
+  wasm_extern_vec_t instance_exports;
+
+  /* TODO(marceline-cramer): use mdo-utils vector */
+  struct
+  {
+    mdo_ui_panel_t **vals;
+    size_t size;
+    size_t capacity;
+  } panels;
 };
 
 static mdo_result_t
@@ -47,7 +62,7 @@ log_wasm_trap (mdo_ui_script_t *ui_script, wasm_trap_t *trap)
 }
 
 static wasm_trap_t *
-env_abort_cb (void *env, const wasm_val_t args[], wasm_val_t results[])
+env_abort_cb (void *env, const wasm_val_vec_t *args, wasm_val_vec_t *results)
 {
   return NULL;
 }
@@ -64,11 +79,9 @@ link_function (mdo_ui_script_t *ui_script, const char *module,
 {
   wasm_name_t module_name;
   wasm_name_new_from_string (&module_name, module);
-  module_name.size--; /* remove null terminator to avoid Wasmtime linker bug */
 
   wasm_name_t func_name;
   wasm_name_new_from_string (&func_name, symbol);
-  func_name.size--; /* remove null terminator to avoid Wasmtime linker bug */
 
   /* TODO(marceline-cramer): collect created funcs with vector and delete */
   wasm_func_t *func = wasm_func_new_with_env (ui_script->store, functype, cb,
@@ -97,6 +110,14 @@ mdo_ui_script_create (mdo_ui_script_t **ui_script,
   new_ui_script->module = NULL;
   new_ui_script->instance = NULL;
 
+  wasm_exporttype_vec_new_empty (&new_ui_script->export_types);
+  wasm_extern_vec_new_empty (&new_ui_script->instance_exports);
+
+  new_ui_script->panels.capacity = 16;
+  new_ui_script->panels.vals = mdo_allocator_calloc (
+      alloc, new_ui_script->panels.capacity, sizeof (mdo_ui_panel_t *));
+  new_ui_script->panels.size = 0;
+
   mdo_result_t wasm_error
       = mdo_result_create (MDO_LOG_ERROR, "wasm error: %s", 1, false);
   new_ui_script->wasm_error = wasm_error;
@@ -106,7 +127,7 @@ mdo_ui_script_create (mdo_ui_script_t **ui_script,
   new_ui_script->wasmtime_error = wasmtime_error;
 
   mdo_result_t wasm_trap_error
-      = mdo_result_create (MDO_LOG_ERROR, "wasmtrap thrown: %s", 1, false);
+      = mdo_result_create (MDO_LOG_ERROR, "wasm trap thrown: %s", 1, false);
   new_ui_script->wasm_trap_error = wasm_trap_error;
 
   new_ui_script->engine = wasm_engine_new ();
@@ -121,19 +142,40 @@ mdo_ui_script_create (mdo_ui_script_t **ui_script,
   if (!new_ui_script->linker)
     return LOG_RESULT (wasmtime_error, "failed to create linker");
 
-  wasm_valtype_vec_t params;
-  wasm_valtype_vec_new_uninitialized (&params, 4);
+  {
+    wasm_valtype_vec_t params;
+    wasm_valtype_vec_new_uninitialized (&params, 4);
 
-  for (size_t i = 0; i < params.size; i++)
-    params.data[i] = wasm_valtype_new_i32 ();
+    for (size_t i = 0; i < params.size; i++)
+      params.data[i] = wasm_valtype_new_i32 ();
 
-  wasm_valtype_vec_t results;
-  wasm_valtype_vec_new_empty (&results);
+    wasm_valtype_vec_t results;
+    wasm_valtype_vec_new_empty (&results);
 
-  /* TODO(marceline-cramer): collect with vector and delete */
-  wasm_functype_t *functype = wasm_functype_new (&params, &results);
+    /* TODO(marceline-cramer): collect with vector and delete */
+    wasm_functype_t *functype = wasm_functype_new (&params, &results);
 
-  link_function (new_ui_script, "env", "abort", functype, env_abort_cb);
+    link_function (new_ui_script, "env", "abort", functype, env_abort_cb);
+  }
+
+  {
+    wasm_valtype_vec_t params;
+    wasm_valtype_vec_new_uninitialized (&params, 5);
+
+    params.data[0] = wasm_valtype_new_i32 ();
+
+    for (size_t i = 1; i < params.size; i++)
+      params.data[i] = wasm_valtype_new_f32 ();
+
+    wasm_valtype_vec_t results;
+    wasm_valtype_vec_new_empty (&results);
+
+    /* TODO(marceline-cramer): collect with vector and delete */
+    wasm_functype_t *functype = wasm_functype_new (&params, &results);
+
+    link_function (new_ui_script, "", "UiPanel_setColor", functype,
+                   mdo_ui_panel_set_color_cb);
+  }
 
   return MDO_SUCCESS;
 }
@@ -167,6 +209,9 @@ mdo_ui_script_load (mdo_ui_script_t *ui_script, const char *filename)
   if (!ui_script->module)
     return LOG_RESULT (wasm_error, "failed to compile UI script");
 
+  wasm_exporttype_vec_delete (&ui_script->export_types);
+  wasm_module_exports (ui_script->module, &ui_script->export_types);
+
   wasm_trap_t *trap = NULL;
   wasmtime_error = wasmtime_linker_instantiate (
       ui_script->linker, ui_script->module, &ui_script->instance, &trap);
@@ -180,6 +225,9 @@ mdo_ui_script_load (mdo_ui_script_t *ui_script, const char *filename)
   if (!ui_script->instance)
     return LOG_RESULT (wasm_error, "failed to instantiate module");
 
+  wasm_extern_vec_delete (&ui_script->instance_exports);
+  wasm_instance_exports (ui_script->instance, &ui_script->instance_exports);
+
   return MDO_SUCCESS;
 }
 
@@ -189,11 +237,20 @@ mdo_ui_script_delete (mdo_ui_script_t *ui_script)
 
   const mdo_allocator_t *alloc = ui_script->alloc;
 
+  if (ui_script->panels.vals)
+    mdo_allocator_free (alloc, ui_script->panels.vals);
+
   if (ui_script->instance)
-    wasm_instance_delete (ui_script->instance);
+    {
+      wasm_extern_vec_delete (&ui_script->instance_exports);
+      wasm_instance_delete (ui_script->instance);
+    }
 
   if (ui_script->module)
-    wasm_module_delete (ui_script->module);
+    {
+      wasm_exporttype_vec_delete (&ui_script->export_types);
+      wasm_module_delete (ui_script->module);
+    }
 
   if (ui_script->linker)
     wasmtime_linker_delete (ui_script->linker);
@@ -215,3 +272,66 @@ mdo_ui_script_new_trap (mdo_ui_script_t *ui_script, const char *message)
   return wasm_trap_new (ui_script->store, &wasm_message);
 }
 
+static wasm_func_t *
+get_callback (mdo_ui_script_t *ui_script, const char *symbol)
+{
+  size_t symbol_len = strlen (symbol);
+
+  for (size_t i = 0; i < ui_script->instance_exports.size; i++)
+    {
+      wasm_exporttype_t *export_type = ui_script->export_types.data[i];
+      const wasm_name_t *export_name = wasm_exporttype_name (export_type);
+
+      wasm_extern_t *exported = ui_script->instance_exports.data[i];
+      wasm_externkind_t extern_kind = wasm_extern_kind (exported);
+
+      if (extern_kind != WASM_EXTERN_FUNC)
+        continue;
+
+      if (strncmp (export_name->data, symbol, symbol_len) != 0)
+        continue;
+
+      return wasm_extern_as_func (exported);
+    }
+
+  return NULL;
+}
+
+mdo_result_t
+mdo_ui_script_bind_panel (mdo_ui_script_t *ui_script, mdo_ui_panel_t *ui_panel,
+                          mdo_ui_panel_key_t *panel_key)
+{
+  /* TODO(marceline-cramer): bounds checking, reallocation */
+  *panel_key = ui_script->panels.size++;
+  ui_script->panels.vals[*panel_key] = ui_panel;
+
+  wasm_func_t *bind_panel_cb = get_callback (ui_script, "bind_panel");
+
+  wasm_val_vec_t args, results;
+
+  wasm_val_vec_new_uninitialized (&args, 1);
+  args.data[0] = (wasm_val_t)WASM_I32_VAL (*panel_key);
+
+  wasm_val_vec_new_empty (&results);
+
+  wasm_func_call (bind_panel_cb, &args, &results);
+
+  return MDO_SUCCESS;
+}
+
+void
+mdo_ui_script_unbind_panel (mdo_ui_script_t *ui_script,
+                            mdo_ui_panel_key_t panel_key)
+{
+  /* TODO(marceline-cramer): bounds checking, reallocation */
+  ui_script->panels.vals[panel_key] = NULL;
+}
+
+mdo_ui_panel_t *
+mdo_ui_script_lookup_panel (mdo_ui_script_t *ui_script,
+                            mdo_ui_panel_key_t panel_key)
+{
+  /* TODO(marceline-cramer): bounds checking */
+  LOG_MSG ("key: %zu", panel_key);
+  return ui_script->panels.vals[panel_key];
+}
