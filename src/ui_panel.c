@@ -27,3 +27,10 @@ mdo_ui_panel_delete (mdo_ui_panel_t *ui_panel)
 
   mdo_allocator_free (alloc, ui_panel);
 }
+
+wasm_trap_t *
+mdo_ui_panel_set_color_cb (void *env, const wasm_val_t args[],
+                           wasm_val_t results[])
+{
+  return NULL;
+}
