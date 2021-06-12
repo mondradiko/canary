@@ -36,6 +36,13 @@ void mdo_ui_script_delete (mdo_ui_script_t *);
  */
 mdo_result_t mdo_ui_script_load (mdo_ui_script_t *, const char *);
 
+/** @function mdo_ui_script_new_trap
+ * @param ui_script
+ * @param message
+ * @return #wasm_trap_t.
+ */
+wasm_trap_t *mdo_ui_script_new_trap (mdo_ui_script_t *, const char *);
+
 /** @function mdo_ui_script_bind_panel
  */
 

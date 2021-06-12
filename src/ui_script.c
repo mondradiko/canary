@@ -206,3 +206,12 @@ mdo_ui_script_delete (mdo_ui_script_t *ui_script)
 
   mdo_allocator_free (alloc, ui_script);
 }
+
+wasm_trap_t *
+mdo_ui_script_new_trap (mdo_ui_script_t *ui_script, const char *message)
+{
+  wasm_message_t wasm_message;
+  wasm_name_new_from_string_nt (&wasm_message, message);
+  return wasm_trap_new (ui_script->store, &wasm_message);
+}
+
