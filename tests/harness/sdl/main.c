@@ -54,6 +54,7 @@ run_harness (const char *filename)
 
   mdo_ui_script_t *ui_script = NULL;
   mdo_ui_panel_t *panel = NULL;
+  vk_renderer_t *renderer = NULL;
   mdo_ui_draw_list_t *ui_draw = NULL;
 
   SDL_Window *window = NULL;
