@@ -1,5 +1,11 @@
 #pragma once
 
-#include "ui_renderer.h"
+#include <mdo-utils/allocator.h>
 
-mdo_ui_renderer_t *create_vk_renderer (const mdo_allocator_t *);
+/** @typedef vk_renderer_t
+ */
+typedef struct vk_renderer_s vk_renderer_t;
+
+vk_renderer_t *vk_renderer_create (const mdo_allocator_t *);
+
+void vk_renderer_delete (vk_renderer_t *);
