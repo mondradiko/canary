@@ -51,9 +51,12 @@ void mdo_ui_draw_list_concat (mdo_ui_draw_list_t *,
 void mdo_ui_draw_list_clear (mdo_ui_draw_list_t *);
 
 /** @function mdo_ui_draw_vertex
+ * @param ui_draw
+ * @param vertex #mdo_ui_draw_vertex_t.
  * @return #mdo_ui_draw_index_t.
  */
-mdo_ui_draw_index_t mdo_ui_draw_vertex (const mdo_ui_draw_vertex_t *);
+mdo_ui_draw_index_t mdo_ui_draw_vertex (mdo_ui_draw_list_t *,
+                                        const mdo_ui_draw_vertex_t *);
 
 /** @function mdo_ui_draw_list_vertex_count
  * @param ui_draw
