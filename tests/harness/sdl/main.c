@@ -72,14 +72,6 @@ run_harness (const char *filename)
       goto error;
     }
 
-  renderer = vk_renderer_create (alloc);
-  if (!renderer)
-    {
-      LOG_ERR ("failed to create UI renderer");
-      error_code = 1;
-      goto error;
-    }
-
   result = mdo_ui_panel_create (&panel, alloc);
   if (!mdo_result_success (result))
     {
@@ -101,6 +93,14 @@ run_harness (const char *filename)
   if (!window)
     {
       LOG_ERR ("failed to create panel window");
+      error_code = 1;
+      goto error;
+    }
+
+  renderer = vk_renderer_create (alloc, window);
+  if (!renderer)
+    {
+      LOG_ERR ("failed to create UI renderer");
       error_code = 1;
       goto error;
     }
