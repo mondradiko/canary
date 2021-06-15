@@ -333,7 +333,10 @@ mdo_ui_script_bind_panel (mdo_ui_script_t *ui_script, mdo_ui_panel_t *ui_panel,
 
   wasm_val_vec_new_empty (&results);
 
-  wasm_func_call (bind_panel_cb, &args, &results);
+  wasm_trap_t *trap = wasm_func_call (bind_panel_cb, &args, &results);
+
+  if (trap)
+    return log_wasm_trap (ui_script, trap);
 
   return MDO_SUCCESS;
 }
