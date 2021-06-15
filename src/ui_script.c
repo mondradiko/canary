@@ -354,6 +354,5 @@ mdo_ui_script_lookup_panel (mdo_ui_script_t *ui_script,
                             mdo_ui_panel_key_t panel_key)
 {
   /* TODO(marceline-cramer): bounds checking */
-  LOG_MSG ("key: %zu", panel_key);
   return ui_script->panels.vals[panel_key];
 }
