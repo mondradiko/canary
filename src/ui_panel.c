@@ -12,6 +12,8 @@ struct mdo_ui_panel_s
   const mdo_allocator_t *alloc;
 
   float color[4];
+
+  mdo_ui_draw_list_t *draw_list;
 };
 
 mdo_result_t
@@ -22,6 +24,7 @@ mdo_ui_panel_create (mdo_ui_panel_t **ui_panel, const mdo_allocator_t *alloc)
   *ui_panel = new_ui_panel;
 
   new_ui_panel->alloc = alloc;
+  new_ui_panel->draw_list = NULL;
 
   return MDO_SUCCESS;
 }
@@ -44,6 +47,13 @@ void
 mdo_ui_panel_get_color (mdo_ui_panel_t *ui_panel, float color[4])
 {
   memcpy (color, ui_panel->color, sizeof (float) * 4);
+}
+
+void
+mdo_ui_panel_set_draw_list (mdo_ui_panel_t *ui_panel,
+                            mdo_ui_draw_list_t *ui_draw)
+{
+  ui_panel->draw_list = ui_draw;
 }
 
 static wasm_trap_t *
@@ -85,4 +95,11 @@ mdo_ui_panel_set_color_cb (void *env, const wasm_val_vec_t *args,
     }
 
   return trap;
+}
+
+wasm_trap_t *
+mdo_ui_panel_draw_triangle_cb (void *env, const wasm_val_vec_t *args,
+                               wasm_val_vec_t *results)
+{
+  return NULL;
 }
