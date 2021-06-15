@@ -25,7 +25,6 @@ mondradiko_setup_library (mdo-ui MDO_UI_OBJ
   src/ui_ctx.c
   src/ui_draw_list.c
   src/ui_panel.c
-  src/ui_renderer.c
   src/ui_script.c
 )
 

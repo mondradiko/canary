@@ -54,8 +54,8 @@ run_harness (const char *filename)
 
   mdo_ui_script_t *ui_script = NULL;
   mdo_ui_panel_t *panel = NULL;
-  mdo_ui_renderer_t *ui_renderer = NULL;
   mdo_ui_draw_list_t *ui_draw = NULL;
+
   SDL_Window *window = NULL;
 
   result = mdo_ui_script_create (&ui_script, alloc);
@@ -70,14 +70,6 @@ run_harness (const char *filename)
   if (!mdo_result_success (result))
     {
       LOG_ERR ("failed to load UI script");
-      error_code = 1;
-      goto error;
-    }
-
-  ui_renderer = create_vk_renderer (alloc);
-  if (!ui_renderer)
-    {
-      LOG_ERR ("failed to create UI renderer");
       error_code = 1;
       goto error;
     }
@@ -117,8 +109,16 @@ run_harness (const char *filename)
       goto error;
     }
 
-  mdo_ui_panel_set_draw_list (panel, ui_draw);
+  renderer = vk_renderer_create (alloc, window);
+  if (!renderer)
+    {
+      LOG_ERR ("failed to create UI renderer");
+      error_code = 1;
+      goto error;
+    }
 
+  mdo_ui_panel_set_draw_list (panel, ui_draw);
+ 
   while (!poll_sdl_events (window, panel))
     ;
 
@@ -135,8 +135,8 @@ error:
       mdo_ui_panel_delete (panel);
     }
 
-  if (ui_renderer)
-    mdo_ui_renderer_delete (ui_renderer);
+  if (renderer)
+    vk_renderer_delete (renderer);
 
   if (ui_script)
     mdo_ui_script_delete (ui_script);
