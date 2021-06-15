@@ -55,6 +55,30 @@ void mdo_ui_draw_list_clear (mdo_ui_draw_list_t *);
  */
 mdo_ui_draw_index_t mdo_ui_draw_vertex (const mdo_ui_draw_vertex_t *);
 
+/** @function mdo_ui_draw_list_vertex_count
+ * @param ui_draw
+ * @return The number of vertices in the list.
+ */
+size_t mdo_ui_draw_list_vertex_count (mdo_ui_draw_list_t *);
+
+/** @function mdo_ui_draw_list_vertex_buffer
+ * @param ui_draw
+ * @return A pointer to the vertex buffer in the list.
+ */
+mdo_ui_draw_vertex_t *mdo_ui_draw_vertex_buffer (mdo_ui_draw_list_t *);
+
+/** @function mdo_ui_draw_list_index_count
+ * @param ui_draw
+ * @return The number of indices in the list.
+ */
+size_t mdo_ui_draw_list_index_count (mdo_ui_draw_list_t *);
+
+/** @function mdo_ui_draw_list_index_buffer
+ * @param ui_draw
+ * @return A pointer to the index buffer in the list.
+ */
+mdo_ui_draw_index_t *mdo_ui_draw_list_index_buffer (mdo_ui_draw_list_t *);
+
 /** @function mdo_ui_draw_triangle
  * @param ui_draw
  * @param vertex1
