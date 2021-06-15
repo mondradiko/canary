@@ -177,6 +177,25 @@ mdo_ui_script_create (mdo_ui_script_t **ui_script,
                    mdo_ui_panel_set_color_cb);
   }
 
+  {
+    wasm_valtype_vec_t params;
+    wasm_valtype_vec_new_uninitialized (&params, 11);
+
+    params.data[0] = wasm_valtype_new_i32 ();
+
+    for (size_t i = 1; i < params.size; i++)
+      params.data[i] = wasm_valtype_new_f32 ();
+
+    wasm_valtype_vec_t results;
+    wasm_valtype_vec_new_empty (&results);
+
+    /* TODO(marceline-cramer): collect with vector and delete */
+    wasm_functype_t *functype = wasm_functype_new (&params, &results);
+
+    link_function (new_ui_script, "", "UiPanel_drawTriangle", functype,
+                   mdo_ui_panel_draw_triangle_cb);
+  }
+
   return MDO_SUCCESS;
 }
 
@@ -314,7 +333,10 @@ mdo_ui_script_bind_panel (mdo_ui_script_t *ui_script, mdo_ui_panel_t *ui_panel,
 
   wasm_val_vec_new_empty (&results);
 
-  wasm_func_call (bind_panel_cb, &args, &results);
+  wasm_trap_t *trap = wasm_func_call (bind_panel_cb, &args, &results);
+
+  if (trap)
+    return log_wasm_trap (ui_script, trap);
 
   return MDO_SUCCESS;
 }
@@ -332,6 +354,5 @@ mdo_ui_script_lookup_panel (mdo_ui_script_t *ui_script,
                             mdo_ui_panel_key_t panel_key)
 {
   /* TODO(marceline-cramer): bounds checking */
-  LOG_MSG ("key: %zu", panel_key);
   return ui_script->panels.vals[panel_key];
 }

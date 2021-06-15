@@ -2,6 +2,7 @@ include_directories (.)
 
 include (mondradiko_create_test)
 mondradiko_create_test (${MDO_UI_OBJ} test_ui_ctx unit/test_ui_ctx.c)
+mondradiko_create_test (${MDO_UI_OBJ} test_ui_draw_list unit/test_ui_draw_list.c)
 
 add_subdirectory (vk-bootstrap)
 find_package (SDL2 CONFIG REQUIRED)
