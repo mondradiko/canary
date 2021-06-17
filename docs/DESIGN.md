@@ -1,20 +1,39 @@
-# Introduction
+# Overview
 
 This is the design document for the Mondradiko UI framework (still unnamed), a
 spatial UI framework designed for easy integration, high customizability, and
 use in an XR environment.
 
-## Goals
+# Goals
 
-### Flexibility
+## Customizability
 
-### Customizability
+The dream of this UI framework is to let users customize their menus, HUDs,
+color scheme, widget themes, etc. however they want, and then be able to bring
+that UI configuration across separate servers in a metaverse platform, or even
+across metaverse platforms altogether.
 
-### Performance
+If users will be spending hours at a time in online metaverse platforms, having
+this level of customizability would provide some much-needed comfort and
+personal expression.
 
-# Design Overview
+## Flexibility
 
-## UI Panels
+Another goal of the UI framework is flexibility. This can mean a couple of
+different things.
+
+First of all, it means that the UI framework is able to adapt to new XR
+technologies that change how XR UIs are interacted with. If this framework
+is meant to be the go-to choice for XR-friendly UI development, then it's
+essential that it can grow with XR hardware as it matures.
+
+Second of all, it means that the UI framework must be simple, and easy to embed
+into XR platforms that need it. By abstracting its logic away from any
+higher-level game logic, platform requirements, 
+
+## Performance
+
+# UI Panels
 
 The centerpiece of the UI framework is the "panel," a floating, rectangular
 object that users primarily interact with. Widgets are drawn onto the
@@ -32,7 +51,7 @@ user's faces, draw large or distracting shapes, or otherwise visually
 interfere with user experience. This is why panels are a necessary construct;
 to sandbox UI behavior.
 
-### Attributes
+## Attributes
 
 - color (RGBA)
 - position (XYZ)
@@ -41,7 +60,7 @@ to sandbox UI behavior.
 - horizontal/vertical curve (expressed as radians)
 - corner rounding (one radius per corner)
 
-## UI Scripts
+# Scripting
 
 The core functionality of the UI framework comes from its scripting,
 which is powered by [WebAssembly](https://webassembly.org/). WebAssembly is a
@@ -65,9 +84,26 @@ perfect choice for this scripting environment because:
 	are small in size, and can be easily distributed and deployed, meaning that
 	for the user, bringing their personal, customized UI between apps is simple.
 
-## Rendering
+"UI scripts," then, are WebAssembly modules that implement all UI functionality
+within the framework, including widget drawing, event handling, and animations.
+This design lends itself to [portability](#flexibility), as well as to
+virtually limitless [customizability](#customizability), while not sacrificing
+[performance](#performance).
 
-### Immediate Mode
+The ultimate purpose of the UI scripting environment is to provide UI script
+authors with a playground to make whatever UI engine they want, while still
+grounding it in usefulness and consistency by
+[interfacing with it properly](#protocol).
+
+# Protocol
+
+## FlatBuffers
+
+## Language Support
+
+# Rendering
+
+## Immediate Mode
 
 All UI rendering is done in immediate mode. If you are familiar with user
 interface framework design, this may seem unusual to you, considering that
@@ -84,23 +120,44 @@ a script implementation's representation of the UI is similar to a DOM, then it
 may benefit from implementing some DOM-like rendering logic itself, giving the
 UI framework as a whole the best of both worlds.
 
-### Draw Commands
+## Draw Commands
 
-## Protocol
+UI contents are composed out of a simple triangle list, per panel. The UI
+script can call a host function to draw single triangles, helper functions to
+draw common primitives (circles, rounded rectangles, polygons, etc.), or a host
+function that directly draws vertex and index buffers from within Wasm memory.
 
-### FlatBuffers
+The last option, drawing buffers directly, allows the UI script to cache its
+draw calls or quickly render complex primitives without spending a host
+function call for each triangle every frame.
 
-### Language Support
+## Glyphs
 
-## Embedding
+... TODO ...
 
-### Requirements
+# Audio
 
-### Adding Input Methods
+... TODO ...
 
-### Hosting over IPC
+# Embedding
 
-### Hosting to Remote Clients
+The UI framework can be embedded into larger XR applications ("host
+environments") to provide [flexible](#flexibility),
+[customizable](#customizability), and [lightweight](#performant) UI
+functionality.
+
+Natively, this would be done by linking to the UI framework as a library. In
+the browser, the UI framework would be integrated as a WebAssembly module. 
+
+## Consuming Triangle Lists
+
+## Adding Input Methods
+
+## Sending/Receiving Widget Data 
+
+## Hosting over IPC
+
+## Hosting to Remote Clients
 
 # Input
 
