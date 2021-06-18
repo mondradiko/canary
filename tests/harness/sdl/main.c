@@ -124,6 +124,9 @@ run_harness (const char *filename)
     ;
 
 error:
+  if (renderer)
+    vk_renderer_delete (renderer);
+
   if (window)
     SDL_DestroyWindow (window);
 
@@ -135,9 +138,6 @@ error:
       mdo_ui_script_unbind_panel (ui_script, panel_key);
       mdo_ui_panel_delete (panel);
     }
-
-  if (renderer)
-    vk_renderer_delete (renderer);
 
   if (ui_script)
     mdo_ui_script_delete (ui_script);
