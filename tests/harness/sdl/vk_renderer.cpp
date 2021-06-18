@@ -68,6 +68,20 @@ vk_renderer_create (const mdo_allocator_t *alloc, SDL_Window *window)
 
   vk_renderer->device = device_ret.value ();
 
+  /* TODO(marceline-cramer): swapchain recreation *on resize* */
+  vkb::SwapchainBuilder swapchain_builder{ vk_renderer->device };
+  auto swap_ret = swapchain_builder.build ();
+  if (!swap_ret)
+    {
+      LOG_ERR ("failed to create swapchain: %s", swap_ret.vk_result ());
+      return NULL;
+    }
+
+  /* for deleting old swapchain later */
+  /* vkb::destroy_swapchain (vk_renderer->swapchain); */
+
+  vk_renderer->swapchain = swap_ret.value ();
+
   return vk_renderer;
 }
 
@@ -76,6 +90,7 @@ vk_renderer_delete (vk_renderer_t *vk_renderer)
 {
   const mdo_allocator_t *alloc = vk_renderer->alloc;
 
+  vkb::destroy_swapchain (vk_renderer->swapchain);
   vkb::destroy_device (vk_renderer->device);
   vkb::destroy_surface (vk_renderer->instance, vk_renderer->surface);
   vkb::destroy_instance (vk_renderer->instance);
