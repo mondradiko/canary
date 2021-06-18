@@ -9,20 +9,19 @@ extern "C"
 
 struct vk_renderer_s
 {
-  const mdo_allocator_t *alloc;
-
   vkb::Instance instance;
   VkSurfaceKHR surface;
   vkb::Device device;
   vkb::Swapchain swapchain;
+
+  VkQueue graphics_queue;
+  VkQueue present_queue;
 };
 
 vk_renderer_t *
 vk_renderer_create (const mdo_allocator_t *alloc, SDL_Window *window)
 {
-  vk_renderer_t *vk_renderer = static_cast<vk_renderer_t *> (
-      mdo_allocator_malloc (alloc, sizeof (vk_renderer_t)));
-  vk_renderer->alloc = alloc;
+  vk_renderer_t *vk_renderer = new vk_renderer_t;
 
   vkb::InstanceBuilder instance_builder;
   auto instance_ret = instance_builder.use_default_debug_messenger ()
@@ -69,18 +68,39 @@ vk_renderer_create (const mdo_allocator_t *alloc, SDL_Window *window)
   vk_renderer->device = device_ret.value ();
 
   /* TODO(marceline-cramer): swapchain recreation *on resize* */
-  vkb::SwapchainBuilder swapchain_builder{ vk_renderer->device };
+  /*vkb::SwapchainBuilder swapchain_builder{ vk_renderer->device };
   auto swap_ret = swapchain_builder.build ();
   if (!swap_ret)
     {
-      LOG_ERR ("failed to create swapchain: %s", swap_ret.vk_result ());
+      LOG_ERR ("failed to create swapchain: %s",
+               swap_ret.error ().message ().c_str ());
       return NULL;
-    }
+    }*/
 
   /* for deleting old swapchain later */
   /* vkb::destroy_swapchain (vk_renderer->swapchain); */
 
-  vk_renderer->swapchain = swap_ret.value ();
+  /* vk_renderer->swapchain = swap_ret.value (); */
+
+  /*auto gq = vk_renderer->device.get_queue (vkb::QueueType::graphics);
+  if (!gq.has_value ())
+    {
+      LOG_ERR ("failed to get graphics queue: %s",
+               gq.error ().message ().c_str ());
+      return NULL;
+    }
+
+  vk_renderer->graphics_queue = gq.value ();
+
+  auto pq = vk_renderer->device.get_queue (vkb::QueueType::present);
+  if (!pq.has_value ())
+    {
+      LOG_ERR ("failed to get present queue: %s",
+               pq.error ().message ().c_str ());
+      return NULL;
+    }
+
+  vk_renderer->present_queue = pq.value ();*/
 
   return vk_renderer;
 }
@@ -88,12 +108,10 @@ vk_renderer_create (const mdo_allocator_t *alloc, SDL_Window *window)
 void
 vk_renderer_delete (vk_renderer_t *vk_renderer)
 {
-  const mdo_allocator_t *alloc = vk_renderer->alloc;
-
   vkb::destroy_swapchain (vk_renderer->swapchain);
   vkb::destroy_device (vk_renderer->device);
   vkb::destroy_surface (vk_renderer->instance, vk_renderer->surface);
   vkb::destroy_instance (vk_renderer->instance);
 
-  mdo_allocator_free (alloc, vk_renderer);
+  delete vk_renderer;
 }
