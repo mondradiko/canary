@@ -7,7 +7,9 @@ use in an XR environment.
 The target audience of this document consists of developers who are interested
 in embedding this framework, developers who are interested in contributing to
 this framework, UI script authors who would like to understand the internals and
-design philosophies of this 
+design philosophies of to write better scripts, as well as any non-developers
+who would like to learn about and influence open-source XR UI development at
+its source.
 
 # Goals
 
