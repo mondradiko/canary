@@ -4,6 +4,11 @@ This is the design document for the Mondradiko UI framework (still unnamed), a
 spatial UI framework designed for easy integration, high customizability, and
 use in an XR environment.
 
+The target audience of this document consists of developers who are interested
+in embedding this framework, developers who are interested in contributing to
+this framework, UI script authors who would like to understand the internals and
+design philosophies of this 
+
 # Goals
 
 ## Customizability
@@ -29,9 +34,19 @@ essential that it can grow with XR hardware as it matures.
 
 Second of all, it means that the UI framework must be simple, and easy to embed
 into XR platforms that need it. By abstracting its logic away from any
-higher-level game logic, platform requirements, 
+higher-level game logic, platform requirements, or specific hardware mappings,
+its design can be more easily integrated with platforms that already have their
+own solutions to those design facets.
 
 ## Performance
+
+The faster a UI library runs, the more functionality user scripts can pack in,
+and the more room they have to play with new ideas within a given frame budget.
+This extra room may accomodate higher animation fidelity, poly count, or complex
+interaction mechanics. The UI framework also needs to stay lightweight, and out
+of the way of its host environments, for integration's sake. This will mea
+minimizing the overhead of the translation layers between user scripts and the
+host's API.
 
 # UI Panels
 
@@ -124,7 +139,6 @@ in view space.
 
 ## Transposition
 
-
 # Scripting
 
 The core functionality of the UI framework comes from its scripting,
@@ -198,11 +212,11 @@ function call for each triangle every frame.
 
 ## Glyphs
 
-... TODO ...
+> TODO(marceline-cramer): make discussion issue
 
 # Audio
 
-... TODO ...
+> TODO(marceline-cramer): make discussion issue
 
 # Embedding
 
@@ -252,17 +266,59 @@ surface in 3D space. See [panel attributes](#attributes).
 
 ## Panel Binding
 
+Once a panel is created, it must be "bound" to a script. This done by first
+registering a panel with a script wrapper object, giving it an integer key,
+then passing that key, as a Wasm `i32` type, to a function exported by the Wasm
+script. This function returns another `i32` key to be used by the framework as a
+script-defined identifier for that panel's binding. This second `i32` key is
+used by the framework to identify the panel binding to the script.
+
+Both `i32`s are basically opaque identifiers. The first one, passed to the
+script environment by the framework, is the framework-internal integer
+identifier for that panel. This can be used by the script to call
+[draw commands](#draw-commands) as well as to read and write
+[panel attributes](#attributes).
+
+The second opaque identifier is script defined, and could refer to an index into
+a static array containing data structures for each panel implementation, or more
+realistically, a literal pointer into Wasm memory to that structure. For
+example, in an AssemblyScript Wasm script, the binding function can instantiate
+a new object of a class implementing their panel functionality, then return that
+object handle as an `i32`. This `i32` is used by the framework as the first
+argument to script callbacks, so in AssemblyScript, callbacks could be written
+as methods in that class.
+
+AssemblyScript example:
+
+```ts
+class PanelImpl {
+	constructor(public panel: UiPanel) {
+		// read panel attributes
+		// initialize data members
+		// etc.
+	}
+
+	update(dt: f64): void {
+		// animate widgets
+		// submit draw commands
+	}
+}
+
+export function bind_panel(panel: UiPanel): PanelImpl {
+	return new PanelImpl(panel);
+}
+
+export function update(self: PanelImpl, dt: f64): void {
+	self.update(dt);
+}
+```
+
+> TODO(marceline-cramer): can exported callbacks be set by the constructor
+> and bound for unique panel instances? how does that work with Wasm function
+> tables? how well does AssemblyScript handle those function tables? is it
+> worth the added complexity? if so, is implementing this high priority?
+
 ## Sources/Sinks
 
 ## Widget Construction
-
-# Widget Types
-
-## Button
-
-## ToggleButton
-
-## Slider
-
-## Radio
 
