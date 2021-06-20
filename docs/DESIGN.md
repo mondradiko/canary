@@ -109,11 +109,11 @@ The origin (0, 0) is in the center of the panel.
    |
    |
 ---o--->  X
-	 |
-	 |
-	 V
+   |
+   |
+   V
 
-	 Y
+   Y
 ```
 
 ## World Space
