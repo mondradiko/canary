@@ -187,9 +187,7 @@ canary_script_create (canary_script_t **ui_script,
       params.data[i] = wasm_valtype_new_f32 ();
 
     wasm_valtype_vec_t results;
-    wasm_valtype_vec_new_uninitialized (&results, 1);
-
-    results.data[0] = wasm_valtype_new_i32 ();
+    wasm_valtype_vec_new_empty (&results);
 
     /* TODO(marceline-cramer): collect with vector and delete */
     wasm_functype_t *functype = wasm_functype_new (&params, &results);
