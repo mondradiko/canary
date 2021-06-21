@@ -6,7 +6,7 @@
 
 #include "panel.h"
 
-struct mdo_ui_script_s
+struct canary_script_s
 {
   const mdo_allocator_t *alloc;
   mdo_result_t wasm_error;
@@ -27,14 +27,14 @@ struct mdo_ui_script_s
   /* TODO(marceline-cramer): use mdo-utils vector */
   struct
   {
-    mdo_ui_panel_t **vals;
+    canary_panel_t **vals;
     size_t size;
     size_t capacity;
   } panels;
 };
 
 static mdo_result_t
-log_wasmtime_error (mdo_ui_script_t *ui_script, wasmtime_error_t *error)
+log_wasmtime_error (canary_script_t *ui_script, wasmtime_error_t *error)
 {
   wasm_byte_vec_t error_message;
   wasmtime_error_message (error, &error_message);
@@ -48,7 +48,7 @@ log_wasmtime_error (mdo_ui_script_t *ui_script, wasmtime_error_t *error)
 }
 
 static mdo_result_t
-log_wasm_trap (mdo_ui_script_t *ui_script, wasm_trap_t *trap)
+log_wasm_trap (canary_script_t *ui_script, wasm_trap_t *trap)
 {
   wasm_byte_vec_t trap_message;
   wasm_trap_message (trap, &trap_message);
@@ -73,7 +73,7 @@ finalizer_cb (void *env)
 }
 
 static void
-link_function (mdo_ui_script_t *ui_script, const char *module,
+link_function (canary_script_t *ui_script, const char *module,
                const char *symbol, wasm_functype_t *functype,
                wasm_func_callback_with_env_t cb)
 {
@@ -99,11 +99,11 @@ link_function (mdo_ui_script_t *ui_script, const char *module,
 }
 
 mdo_result_t
-mdo_ui_script_create (mdo_ui_script_t **ui_script,
+canary_script_create (canary_script_t **ui_script,
                       const mdo_allocator_t *alloc)
 {
-  mdo_ui_script_t *new_ui_script
-      = mdo_allocator_malloc (alloc, sizeof (mdo_ui_script_t));
+  canary_script_t *new_ui_script
+      = mdo_allocator_malloc (alloc, sizeof (canary_script_t));
   *ui_script = new_ui_script;
 
   new_ui_script->alloc = alloc;
@@ -115,7 +115,7 @@ mdo_ui_script_create (mdo_ui_script_t **ui_script,
 
   new_ui_script->panels.capacity = 16;
   new_ui_script->panels.vals = mdo_allocator_calloc (
-      alloc, new_ui_script->panels.capacity, sizeof (mdo_ui_panel_t *));
+      alloc, new_ui_script->panels.capacity, sizeof (canary_panel_t *));
   new_ui_script->panels.size = 0;
 
   mdo_result_t wasm_error
@@ -174,7 +174,7 @@ mdo_ui_script_create (mdo_ui_script_t **ui_script,
     wasm_functype_t *functype = wasm_functype_new (&params, &results);
 
     link_function (new_ui_script, "", "UiPanel_setColor", functype,
-                   mdo_ui_panel_set_color_cb);
+                   canary_panel_set_color_cb);
   }
 
   {
@@ -195,14 +195,14 @@ mdo_ui_script_create (mdo_ui_script_t **ui_script,
     wasm_functype_t *functype = wasm_functype_new (&params, &results);
 
     link_function (new_ui_script, "", "UiPanel_drawTriangle", functype,
-                   mdo_ui_panel_draw_triangle_cb);
+                   canary_panel_draw_triangle_cb);
   }
 
   return MDO_SUCCESS;
 }
 
 mdo_result_t
-mdo_ui_script_load (mdo_ui_script_t *ui_script, const char *filename)
+canary_script_load (canary_script_t *ui_script, const char *filename)
 {
   const mdo_allocator_t *alloc = ui_script->alloc;
   mdo_result_t wasm_error = ui_script->wasm_error;
@@ -253,7 +253,7 @@ mdo_ui_script_load (mdo_ui_script_t *ui_script, const char *filename)
 }
 
 void
-mdo_ui_script_delete (mdo_ui_script_t *ui_script)
+canary_script_delete (canary_script_t *ui_script)
 {
 
   const mdo_allocator_t *alloc = ui_script->alloc;
@@ -286,7 +286,7 @@ mdo_ui_script_delete (mdo_ui_script_t *ui_script)
 }
 
 wasm_trap_t *
-mdo_ui_script_new_trap (mdo_ui_script_t *ui_script, const char *message)
+canary_script_new_trap (canary_script_t *ui_script, const char *message)
 {
   wasm_message_t wasm_message;
   wasm_name_new_from_string_nt (&wasm_message, message);
@@ -294,7 +294,7 @@ mdo_ui_script_new_trap (mdo_ui_script_t *ui_script, const char *message)
 }
 
 static wasm_func_t *
-get_callback (mdo_ui_script_t *ui_script, const char *symbol)
+get_callback (canary_script_t *ui_script, const char *symbol)
 {
   size_t symbol_len = strlen (symbol);
 
@@ -319,8 +319,8 @@ get_callback (mdo_ui_script_t *ui_script, const char *symbol)
 }
 
 mdo_result_t
-mdo_ui_script_bind_panel (mdo_ui_script_t *ui_script, mdo_ui_panel_t *ui_panel,
-                          mdo_ui_panel_key_t *panel_key)
+canary_script_bind_panel (canary_script_t *ui_script, canary_panel_t *ui_panel,
+                          canary_panel_key_t *panel_key)
 {
   /* TODO(marceline-cramer): bounds checking, reallocation */
   *panel_key = ui_script->panels.size++;
@@ -344,16 +344,16 @@ mdo_ui_script_bind_panel (mdo_ui_script_t *ui_script, mdo_ui_panel_t *ui_panel,
 }
 
 void
-mdo_ui_script_unbind_panel (mdo_ui_script_t *ui_script,
-                            mdo_ui_panel_key_t panel_key)
+canary_script_unbind_panel (canary_script_t *ui_script,
+                            canary_panel_key_t panel_key)
 {
   /* TODO(marceline-cramer): bounds checking, reallocation */
   ui_script->panels.vals[panel_key] = NULL;
 }
 
-mdo_ui_panel_t *
-mdo_ui_script_lookup_panel (mdo_ui_script_t *ui_script,
-                            mdo_ui_panel_key_t panel_key)
+canary_panel_t *
+canary_script_lookup_panel (canary_script_t *ui_script,
+                            canary_panel_key_t panel_key)
 {
   /* TODO(marceline-cramer): bounds checking */
   return ui_script->panels.vals[panel_key];

@@ -17,7 +17,7 @@ typedef struct frame_data_s
 
 struct vk_renderer_s
 {
-  mdo_ui_panel_t *panel;
+  canary_panel_t *panel;
 
   vkb::Instance instance;
   VkSurfaceKHR surface;
@@ -37,7 +37,7 @@ struct vk_renderer_s
 };
 
 vk_renderer_t *
-vk_renderer_create (const mdo_allocator_t *alloc, mdo_ui_panel_t *panel,
+vk_renderer_create (const mdo_allocator_t *alloc, canary_panel_t *panel,
                     SDL_Window *window)
 {
   vk_renderer_t *ren = new vk_renderer_t;

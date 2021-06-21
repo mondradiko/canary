@@ -9,11 +9,11 @@ test_create_and_delete (void **state)
 {
   const mdo_allocator_t *alloc = mdo_default_allocator ();
 
-  mdo_ui_draw_list_t *ui_draw;
-  mdo_result_t result = mdo_ui_draw_list_create (&ui_draw, alloc);
+  canary_draw_list_t *ui_draw;
+  mdo_result_t result = canary_draw_list_create (&ui_draw, alloc);
   assert_true (mdo_result_success (result));
 
-  mdo_ui_draw_list_delete (ui_draw);
+  canary_draw_list_delete (ui_draw);
 }
 
 int

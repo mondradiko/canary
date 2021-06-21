@@ -10,7 +10,7 @@
  */
 typedef struct vk_renderer_s vk_renderer_t;
 
-vk_renderer_t *vk_renderer_create (const mdo_allocator_t *, mdo_ui_panel_t *,
+vk_renderer_t *vk_renderer_create (const mdo_allocator_t *, canary_panel_t *,
                                    SDL_Window *);
 
 void vk_renderer_delete (vk_renderer_t *);
