@@ -1,44 +1,42 @@
 # Overview
 
-This is the design document for the Mondradiko UI framework (still unnamed), a
-spatial UI framework designed for easy integration, high customizability, and
-use in an XR environment.
+This is the design document for Canary, a spatial UI framework designed for easy
+integration, high customizability, and use in an XR environment.
 
 The target audience of this document consists of developers who are interested
-in embedding this framework, developers who are interested in contributing to
-this framework, UI script authors who would like to understand the internals and
-design philosophies of to write better scripts, as well as any non-developers
-who would like to learn about and influence open-source XR UI development at
-its source.
+in embedding Canary, developers who are interested in contributing to Canary,
+UI script authors who would like to understand the internals and design
+philosophies of Canary to write better scripts, as well as any non-developers
+who would like to learn about and influence open-source XR UI development at its
+source.
 
 # Goals
 
 ## Customizability
 
-The dream of this UI framework is to let users customize their menus, HUDs,
-color scheme, widget themes, etc. however they want, and then be able to bring
-that UI configuration across separate servers in a metaverse platform, or even
-across metaverse platforms altogether.
+The dream and primary goal of Canary is to let users customize their menus,
+HUDs, color scheme, widget themes, etc. however they want, and then be able to
+bring that UI configuration across separate servers in online VR platforms, or
+even across platforms altogether.
 
-If users will be spending hours at a time in online metaverse platforms, having
-this level of customizability would provide some much-needed comfort and
-personal expression.
+If users will be spending hours at a time online in VR platforms, having this
+level of customizability would provide some much-needed comfort and personal
+expression.
 
 ## Flexibility
 
-Another goal of the UI framework is flexibility. This can mean a couple of
-different things.
+Another goal of Canary is flexibility. This can mean a couple of different things.
 
-First of all, it means that the UI framework is able to adapt to new XR
-technologies that change how XR UIs are interacted with. If this framework
-is meant to be the go-to choice for XR-friendly UI development, then it's
-essential that it can grow with XR hardware as it matures.
+First of all, it means that Canary is able to adapt to new XR technologies that
+change how XR UIs can be interacted with. If Canary is meant to be the go-to
+choice for XR-friendly UI development, then it's essential that it can grow with
+XR hardware as it matures.
 
-Second of all, it means that the UI framework must be simple, and easy to embed
-into XR platforms that need it. By abstracting its logic away from any
-higher-level game logic, platform requirements, or specific hardware mappings,
-its design can be more easily integrated with platforms that already have their
-own solutions to those design facets.
+Second of all, it means that Canary must be simple, and easy to embed into XR
+platforms that need it. By abstracting its logic away from any higher-level game
+logic, platform requirements, or specific hardware mappings, its design can be
+more easily integrated with platforms that already have their own solutions to
+those design facets.
 
 ## Performance
 
@@ -46,16 +44,51 @@ The faster a UI library runs, the more functionality user scripts can pack in,
 and the more room they have to play with new ideas within a given frame budget.
 This extra room may accomodate higher animation fidelity, poly count, or complex
 interaction mechanics. The UI framework also needs to stay lightweight, and out
-of the way of its host environments, for integration's sake. This will mea
-minimizing the overhead of the translation layers between user scripts and the
-host's API.
+of the way of its host environments, for integration's sake. This will minimize
+the overhead of the translation layers between user scripts and Canary's public
+API.
+
+# Scripting
+
+The core functionality and usefulness Canary comes from its scripting, which is
+powered by [WebAssembly](https://webassembly.org/). WebAssembly is a perfect
+choice for this scripting environment because:
+
+- It's fast. Browsers compile it to native machine code at runtime, so it far
+  outpaces higher-level programming languages like TypeScript and JavaScript.
+- It's safe. WebAssembly operates on linear memory, but the access to this
+  memory is 100% sandboxed, and Wasm cannot access data that it is not
+	explicitly given.
+- It's free-form. Although the raw Wasm bytecode format is more similar to
+  typical assembly language than anything the average UI designer will want
+	to work with, many languages can compile to Wasm, including
+	[TypeScript (AssemblyScript)](https://www.assemblyscript.org/),
+	[Rust](https://www.rust-lang.org/what/wasm),
+	[C/C++](https://emscripten.org/),
+	and [many, many more](https://github.com/appcypher/awesome-wasm-langs).
+	UI authors have plenty of options for how to write their UI implementations.
+- It's portable. WebAssembly can run both in the browser and natively, helping
+  bridge the gap between native and browser-based XR platforms. Wasm modules
+	are small in size, and can be easily distributed and deployed, meaning that
+	for the user, bringing their personal, customized UI between apps is simple.
+
+"UI scripts," then, are WebAssembly modules that implement all UI functionality
+within Canary, including widget drawing, event handling, and animations. This
+design lends itself to [portability](#flexibility), as well as to virtually
+limitless [customizability](#customizability), while not sacrificing
+[performance](#performance).
+
+The ultimate purpose of the UI scripting environment is to provide UI script
+authors with a playground to make whatever UI engine they want, while still
+grounding it in usefulness and consistency by
+[interfacing with it properly](#protocol).
 
 # UI Panels
 
-The centerpiece of the UI framework is the "panel," a floating, rectangular
-object that users primarily interact with. Widgets are drawn onto the
-panels, and users interact with those widgets with controllers, hand trackers,
-etc., to trigger events to be processed by the host environment.
+The central point of interaction in Canary is the "panel," a floating,
+rectangular object. Widgets are drawn onto the panels, and users interact with
+those widgets with controllers, hand trackers, etc., to trigger events to be
+processed by the host environment.
 
 Panels can be positioned and oriented arbitrarily in 3D space, and can be any
 width and height, or even curved. They can also be organized into different
@@ -71,7 +104,7 @@ to sandbox UI behavior.
 ## Attributes
 
 More panel attributes will be added over time as the needs of a panel change.
-For now, panels are represented as simple, colored rectangles in 3D space.
+For now, panels are represented as flat, colored rectangles in 3D space.
 
 Current attributes:
 - color (RGBA)
@@ -93,8 +126,8 @@ Future attributes:
 
 # Spaces
 
-The user interface framework operates in four different spaces: panel space,
-world space, stage space, and view space.
+Canary operates in four different spaces: panel space, world space, stage space,
+and view space.
 
 ## Panel Space
 
@@ -140,41 +173,6 @@ View space is relative to a viewer's headset. Panels placed in view space are
 in view space.
 
 ## Transposition
-
-# Scripting
-
-The core functionality of the UI framework comes from its scripting,
-which is powered by [WebAssembly](https://webassembly.org/). WebAssembly is a
-perfect choice for this scripting environment because:
-
-- It's fast. Browsers compile it to native machine code at runtime, so it far
-  outpaces higher-level programming languages like TypeScript and JavaScript.
-- It's safe. WebAssembly operates on linear memory, but the access to this
-  memory is 100% sandboxed, and Wasm cannot access data that it is not
-	explicitly given.
-- It's free-form. Although the raw Wasm bytecode format is more similar to
-  typical assembly language than anything the average UI designer will want
-	to work with, many languages can compile to Wasm, including
-	[TypeScript (AssemblyScript)](https://www.assemblyscript.org/),
-	[Rust](https://www.rust-lang.org/what/wasm),
-	[C/C++](https://emscripten.org/),
-	and [many, many more](https://github.com/appcypher/awesome-wasm-langs).
-	UI authors have plenty of options for how to write their UI implementations.
-- It's portable. WebAssembly can run both in the browser and natively, helping
-  bridge the gap between native and browser-based XR platforms. Wasm modules
-	are small in size, and can be easily distributed and deployed, meaning that
-	for the user, bringing their personal, customized UI between apps is simple.
-
-"UI scripts," then, are WebAssembly modules that implement all UI functionality
-within the framework, including widget drawing, event handling, and animations.
-This design lends itself to [portability](#flexibility), as well as to
-virtually limitless [customizability](#customizability), while not sacrificing
-[performance](#performance).
-
-The ultimate purpose of the UI scripting environment is to provide UI script
-authors with a playground to make whatever UI engine they want, while still
-grounding it in usefulness and consistency by
-[interfacing with it properly](#protocol).
 
 # Protocol
 
@@ -224,13 +222,12 @@ function call for each triangle every frame.
 
 # Embedding
 
-The UI framework can be embedded into larger XR applications ("host
-environments") to provide [flexible](#flexibility),
-[customizable](#customizability), and [lightweight](#performant) UI
-functionality.
+Canary can be embedded into larger XR applications ("host environments") to
+provide [flexible](#flexibility), [customizable](#customizability), and
+[lightweight](#performant) UI functionality.
 
-Natively, this would be done by linking to the UI framework as a library. In
-the browser, the UI framework would be integrated as a WebAssembly module. 
+Natively, this would be done by linking to Canary as a library. In the browser,
+Canary would be integrated as a WebAssembly module.
 
 ## Processing Triangle Lists
 
@@ -252,7 +249,7 @@ surface in 3D space. See [panel attributes](#attributes).
 
 ### Hand Input
 
-## Sending/Receiving Widget Data 
+## Sending/Receiving Widget Data
 
 ## Hosting over IPC
 
@@ -278,7 +275,7 @@ script-defined identifier for that panel's binding. This second `i32` key is
 used by the framework to identify the panel binding to the script.
 
 Both `i32`s are basically opaque identifiers. The first one, passed to the
-script environment by the framework, is the framework-internal integer
+script environment by the Canary framework, is the internal integer
 identifier for that panel. This can be used by the script to call
 [draw commands](#draw-commands) as well as to read and write
 [panel attributes](#attributes).
@@ -288,9 +285,9 @@ a static array containing data structures for each panel implementation, or more
 realistically, a literal pointer into Wasm memory to that structure. For
 example, in an AssemblyScript Wasm script, the binding function can instantiate
 a new object of a class implementing their panel functionality, then return that
-object handle as an `i32`. This `i32` is used by the framework as the first
-argument to script callbacks, so in AssemblyScript, callbacks could be written
-as methods in that class.
+object handle as an `i32`. This `i32` is used by Canary as the first argument to
+script callbacks, so in AssemblyScript, callbacks could be written as methods
+in that class.
 
 AssemblyScript example:
 
@@ -325,4 +322,3 @@ export function update(self: PanelImpl, dt: f64): void {
 ## Sources/Sinks
 
 ## Widget Construction
-
