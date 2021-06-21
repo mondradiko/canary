@@ -184,6 +184,8 @@ grounding it in usefulness and consistency by
 
 # Rendering
 
+## Why Triangles?
+
 ## Immediate Mode
 
 All UI rendering is done in immediate mode. If you are familiar with user
