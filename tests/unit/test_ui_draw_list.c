@@ -1,8 +1,8 @@
 /** @file test_ui_draw_list.c
  */
 
+#include "draw_list.h"
 #include "test_common.h"
-#include "ui_draw_list.h"
 
 static void
 test_create_and_delete (void **state)

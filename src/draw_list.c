@@ -1,7 +1,7 @@
-/** @file ui_draw_list.c
+/** @file draw_list.c
  */
 
-#include "ui_draw_list.h"
+#include "draw_list.h"
 
 struct mdo_ui_draw_list_s
 {

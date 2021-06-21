@@ -1,8 +1,8 @@
 #include <SDL2/SDL.h>
 
-#include "ui_draw_list.h"
-#include "ui_panel.h"
-#include "ui_script.h"
+#include "draw_list.h"
+#include "panel.h"
+#include "script.h"
 #include "vk_renderer.h"
 
 SDL_Window *

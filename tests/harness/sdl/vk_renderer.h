@@ -4,7 +4,7 @@
 
 #include <mdo-utils/allocator.h>
 
-#include "ui_panel.h"
+#include "panel.h"
 
 /** @typedef vk_renderer_t
  */

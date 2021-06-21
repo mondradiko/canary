@@ -1,11 +1,11 @@
-/** @file ui_panel.c
+/** @file panel.c
  */
 
-#include "ui_panel.h"
+#include "panel.h"
 
 #include <string.h> /* for memcpy */
 
-#include "ui_script.h"
+#include "script.h"
 
 struct mdo_ui_panel_s
 {

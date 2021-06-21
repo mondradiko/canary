@@ -7,7 +7,7 @@
 #include <mdo-utils/result.h>
 #include <wasm.h> /* for script API */
 
-#include "ui_draw_list.h"
+#include "draw_list.h"
 
 /** @typedef mdo_ui_panel_t
  */

@@ -8,7 +8,7 @@
 #include <mdo-utils/allocator.h>
 #include <mdo-utils/result.h>
 
-#include "ui_panel.h"
+#include "panel.h"
 
 /** @typedef mdo_ui_script_t
  */

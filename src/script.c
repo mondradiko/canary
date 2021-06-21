@@ -1,10 +1,10 @@
-#include "ui_script.h"
+#include "script.h"
 
 #include <stdio.h>
 #include <string.h> /* for strlen, strncmp */
 #include <wasmtime.h>
 
-#include "ui_panel.h"
+#include "panel.h"
 
 struct mdo_ui_script_s
 {
