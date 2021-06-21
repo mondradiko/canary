@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 cmake_minimum_required (VERSION 3.18)
-project (mdo-ui VERSION 0.0.0)
+project (canary VERSION 0.0.0)
 
 # options
 option (ENABLE_TESTS "Enable testing suite.")
@@ -21,13 +21,13 @@ set (WASMTIME_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/libwasmtime.a")
 
 # setup library
 include (mondradiko_setup_library)
-mondradiko_setup_library (mdo-ui MDO_UI_OBJ
+mondradiko_setup_library (canary CANARY_OBJ
   src/draw_list.c
   src/panel.c
   src/script.c
 )
 
-target_link_libraries (${MDO_UI_OBJ}
+target_link_libraries (${CANARY_OBJ}
   mondradiko::mdo-utils
   ${WASMTIME_LIBRARIES}
   Threads::Threads
@@ -35,7 +35,7 @@ target_link_libraries (${MDO_UI_OBJ}
   m
 )
 
-target_include_directories (${MDO_UI_OBJ} PUBLIC lib)
+target_include_directories (${CANARY_OBJ} PUBLIC lib)
 
 # tests
 if (ENABLE_TESTS)
