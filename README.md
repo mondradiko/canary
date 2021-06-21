@@ -1,4 +1,11 @@
-# mdo-ui
+# Canary
 
-A VR-oriented user interface framework originally developed for
-[Mondradiko](https://github.com/mondradiko/mondradiko).
+Canary is a spatial UI framework designed for easy integration, high
+customizability, and use in an XR environment.
+
+Canary is developed as part of
+[the Mondradiko project](https://mondradiko.github.io).
+
+## Getting Started
+
+- [design document](/docs/DESIGN.md)
