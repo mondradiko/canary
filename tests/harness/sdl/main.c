@@ -110,7 +110,7 @@ run_harness (const char *filename)
       goto error;
     }
 
-  renderer = vk_renderer_create (alloc, window);
+  renderer = vk_renderer_create (alloc, panel, window);
   if (!renderer)
     {
       LOG_ERR ("failed to create UI renderer");
@@ -119,9 +119,9 @@ run_harness (const char *filename)
     }
 
   mdo_ui_panel_set_draw_list (panel, ui_draw);
- 
+
   while (!poll_sdl_events (window, panel))
-    ;
+    vk_renderer_render_frame (renderer);
 
 error:
   if (renderer)

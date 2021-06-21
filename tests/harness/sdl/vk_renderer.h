@@ -4,10 +4,15 @@
 
 #include <mdo-utils/allocator.h>
 
+#include "ui_panel.h"
+
 /** @typedef vk_renderer_t
  */
 typedef struct vk_renderer_s vk_renderer_t;
 
-vk_renderer_t *vk_renderer_create (const mdo_allocator_t *, SDL_Window *);
+vk_renderer_t *vk_renderer_create (const mdo_allocator_t *, mdo_ui_panel_t *,
+                                   SDL_Window *);
 
 void vk_renderer_delete (vk_renderer_t *);
+
+void vk_renderer_render_frame (vk_renderer_t *);
