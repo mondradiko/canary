@@ -187,7 +187,9 @@ mdo_ui_script_create (mdo_ui_script_t **ui_script,
       params.data[i] = wasm_valtype_new_f32 ();
 
     wasm_valtype_vec_t results;
-    wasm_valtype_vec_new_empty (&results);
+    wasm_valtype_vec_new_uninitialized (&results, 1);
+
+    results.data[0] = wasm_valtype_new_i32 ();
 
     /* TODO(marceline-cramer): collect with vector and delete */
     wasm_functype_t *functype = wasm_functype_new (&params, &results);
@@ -331,7 +333,7 @@ mdo_ui_script_bind_panel (mdo_ui_script_t *ui_script, mdo_ui_panel_t *ui_panel,
   wasm_val_vec_new_uninitialized (&args, 1);
   args.data[0] = (wasm_val_t)WASM_I32_VAL (*panel_key);
 
-  wasm_val_vec_new_empty (&results);
+  wasm_val_vec_new_uninitialized (&results, 1);
 
   wasm_trap_t *trap = wasm_func_call (bind_panel_cb, &args, &results);
 
