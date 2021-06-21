@@ -16,8 +16,8 @@ add_compile_options (-Wpedantic)
 find_package (mdo-utils REQUIRED)
 find_package (Threads REQUIRED)
 
-# wasmtime
-set (WASMTIME_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/libwasmtime.a")
+# libraries
+add_subdirectory (lib)
 
 # setup library
 include (mondradiko_setup_library)
@@ -29,7 +29,7 @@ mondradiko_setup_library (canary CANARY_OBJ
 
 target_link_libraries (${CANARY_OBJ}
   mondradiko::mdo-utils
-  ${WASMTIME_LIBRARIES}
+  wasmtime::wasmtime
   Threads::Threads
   ${CMAKE_DL_LIBS}
   m
