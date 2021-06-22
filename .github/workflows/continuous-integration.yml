@@ -31,13 +31,14 @@ jobs:
       - name: Configure mdo-utils
         shell: bash
         run: |
-          pushd mdo-utils # ~/mdo-utils/
+          pushd mdo-utils
           mkdir build
-          pushd build # ~/mdo-utils/build/
+          pushd build
           cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX
 
       - name: Compile mdo-utils
         shell: bash
+        working-directory: ./mdo-utils/build/
         run: cmake --build .
 
       # - name: Test mdo-utils
@@ -46,6 +47,7 @@ jobs:
 
       - name: Install mdo-utils
         shell: bash
+        working-directory: ./mdo-utils/build/
         run: |
           cmake --install .
           popd # ~/mdo-utils/
@@ -60,21 +62,24 @@ jobs:
       - name: Configure
         shell: bash
         run: |
-          pushd canary # ~/canary/
+          pushd canary
           mkdir build
-          pushd build  # ~/canary/build/
+          pushd build
           cmake .. -GNinja -DENABLE_TESTS=ON -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX
 
       - name: Compile
         shell: bash
+        working-directory: ./canary/build/
         run: cmake --build .
 
       - name: Test
         shell: bash
+        working-directory: ./canary/build/
         run: ctest .
 
       - name: Install
         shell: bash
+        working-directory: ./canary/build/
         run: |
           cmake --install .
           popd # ~/canary/
