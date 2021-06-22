@@ -1,4 +1,4 @@
-/** @file ui_panel.h
+/** @file panel.h
  */
 
 #pragma once
@@ -42,13 +42,13 @@ void canary_panel_set_size (canary_panel_t *, const float[2]);
 void canary_panel_get_size (canary_panel_t *, float[2]);
 
 /** @function canary_panel_set_draw_list
- * @param ui_panel
+ * @param panel
  * @param ui_draw
  */
 void canary_panel_set_draw_list (canary_panel_t *, canary_draw_list_t *);
 
 /** @function canary_panel_get_draw_list
- * @param ui_panel
+ * @param panel
  * @return #canary_draw_list_t.
  */
 canary_draw_list_t *canary_panel_get_draw_list (canary_panel_t *);
