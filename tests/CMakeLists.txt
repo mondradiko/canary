@@ -4,7 +4,7 @@ include (mondradiko_create_test)
 mondradiko_create_test (${CANARY_OBJ} test_draw_list unit/test_draw_list.c)
 
 add_subdirectory (vk-bootstrap)
-find_package (SDL2 CONFIG REQUIRED)
+find_package (SDL2 REQUIRED)
 include (FindVulkan REQUIRED)
 
 add_executable (test-harness-sdl harness/sdl/main.c harness/sdl/vk_renderer.cpp)
