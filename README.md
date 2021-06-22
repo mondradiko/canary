@@ -9,3 +9,4 @@ Canary is developed as part of
 ## Getting Started
 
 - [design document](/docs/DESIGN.md)
+- [Discord server](https://discord.gg/qDaBZfucuf)
