@@ -29,6 +29,18 @@ void canary_panel_set_color (canary_panel_t *, const float[4]);
  */
 void canary_panel_get_color (canary_panel_t *, float[4]);
 
+/** @function canary_panel_set_size
+ * @param panel
+ * @param size
+ */
+void canary_panel_set_size (canary_panel_t *, const float[2]);
+
+/** @function canary_panel_get_size
+ * @param panel
+ * @param size
+ */
+void canary_panel_get_size (canary_panel_t *, float[2]);
+
 /** @function canary_panel_set_draw_list
  * @param ui_panel
  * @param ui_draw

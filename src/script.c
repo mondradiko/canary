@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h> /* for strlen, strncmp */
+#include <wasm.h>
 #include <wasmtime.h>
 
 #include "panel-api.h"
@@ -146,6 +147,25 @@ canary_script_create (canary_script_t **ui_script,
     wasm_functype_t *functype = wasm_functype_new (&params, &results);
 
     link_function (new_ui_script, "env", "abort", functype, env_abort_cb);
+  }
+
+  {
+    /* TODO(marceline-cramer): collect with vector and delete */
+    wasm_functype_t *functype = wasm_functype_new_1_1 (
+        wasm_valtype_new_i32 (), wasm_valtype_new_f32 ());
+    link_function (new_ui_script, "", "UiPanel_getWidth", functype,
+                   canary_panel_get_width_cb);
+    link_function (new_ui_script, "", "UiPanel_getHeight", functype,
+                   canary_panel_get_height_cb);
+  }
+
+  {
+    /* TODO(marceline-cramer): collect with vector and delete */
+    wasm_functype_t *functype = wasm_functype_new_3_0 (
+        wasm_valtype_new_i32 (), wasm_valtype_new_f32 (),
+        wasm_valtype_new_f32 ());
+    link_function (new_ui_script, "", "UiPanel_setSize", functype,
+                   canary_panel_set_size_cb);
   }
 
   {
