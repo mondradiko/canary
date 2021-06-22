@@ -18,8 +18,9 @@ jobs:
       - name: apt
         if: runner.os == 'Linux'
         run: |
-          sudo apt update # seems to be necessary to install packages
-          sudo apt install ninja-build libcmocka-dev libvulkan-dev libsdl2-dev
+          # sudo apt update # seems to be necessary to install packages
+          # sudo apt install ninja-build libcmocka-dev libvulkan-dev libsdl2-dev
+          sudo apt install ninja-build
 
       - name: Checkout mdo-utils repository
         uses: actions/checkout@v2
@@ -61,7 +62,7 @@ jobs:
           pushd canary
           mkdir build
           pushd build
-          cmake .. -GNinja -DENABLE_TESTS=ON -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/$INSTALL_PREFIX
+          cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/$INSTALL_PREFIX
 
       - name: Compile
         shell: bash
