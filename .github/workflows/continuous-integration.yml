@@ -20,7 +20,7 @@ jobs:
 
       - name: apt
         if: runner.os == 'Linux'
-        run: sudo apt install libcmocka-dev
+        run: sudo apt install libcmocka-dev libvulkan-dev libsdl2-dev
 
       - name: Checkout mdo-utils repository
         uses: actions/checkout@v2
@@ -63,17 +63,17 @@ jobs:
           pushd canary
           mkdir build
           pushd build
-          cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/$INSTALL_PREFIX
+          cmake .. -GNinja -DENABLE_TESTS=ON -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/$INSTALL_PREFIX
 
       - name: Compile
         shell: bash
         working-directory: ./canary/build/
         run: cmake --build .
 
-      # - name: Test
-      #  shell: bash
-      #  working-directory: ./canary/build/
-      #  run: ctest .
+      - name: Test
+        shell: bash
+        working-directory: ./canary/build/
+        run: ctest --output-on-failure .
 
       - name: Install
         shell: bash
