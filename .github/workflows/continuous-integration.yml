@@ -12,7 +12,7 @@ jobs:
   continuous-integration:
     runs-on: ubuntu-latest
     env:
-      INSTALL_PREFIX: '$GITHUB_WORKSPACE/install-prefix'
+      INSTALL_PREFIX: '${{ env.GITHUB_WORKSPACE }}/install-prefix'
     steps:
       - name: apt
         if: runner.os == 'Linux'
