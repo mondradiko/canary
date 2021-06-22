@@ -18,6 +18,10 @@ jobs:
       - name: Setup ninja-build
         uses: mondradiko/gha-setup-ninja@v3
 
+      - name: apt
+        if: runner.os == 'Linux'
+        run: sudo apt install libcmocka-dev
+
       - name: Checkout mdo-utils repository
         uses: actions/checkout@v2
         with:
@@ -30,16 +34,17 @@ jobs:
           pushd mdo-utils
           mkdir build
           pushd build
-          cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/$INSTALL_PREFIX
+          cmake .. -GNinja -DENABLE_TESTS=ON -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/$INSTALL_PREFIX
 
       - name: Compile mdo-utils
         shell: bash
         working-directory: ./mdo-utils/build/
         run: cmake --build .
 
-      # - name: Test mdo-utils
-      #   shell: bash
-      #   run: cmake --test .
+      - name: Test mdo-utils
+        shell: bash
+        working-directory: ./mdo-utils/build/
+        run: ctest --output-on-failure .
 
       - name: Install mdo-utils
         shell: bash
@@ -58,17 +63,17 @@ jobs:
           pushd canary
           mkdir build
           pushd build
-          cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/$INSTALL_PREFIX
+          cmake .. -GNinja -DENABLE_TESTS=ON -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/$INSTALL_PREFIX
 
       - name: Compile
         shell: bash
         working-directory: ./canary/build/
         run: cmake --build .
 
-      # - name: Test
-      #  shell: bash
-      #  working-directory: ./canary/build/
-      #  run: ctest .
+      - name: Test
+        shell: bash
+        working-directory: ./canary/build/
+        run: ctest --output-on-failure .
 
       - name: Install
         shell: bash
