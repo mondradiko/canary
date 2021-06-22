@@ -9,7 +9,7 @@ on:
       - main
 
 env:
-  INSTALL_PREFIX_NAME: 'install-prefix'
+  INSTALL_PREFIX: 'install-prefix'
 
 jobs:
   continuous-integration:
@@ -17,11 +17,6 @@ jobs:
     steps:
       - name: Setup ninja-build
         uses: mondradiko/gha-setup-ninja@v3
-
-      - name: Setup environment variables
-        shell: bash
-        run: |
-          export INSTALL_PREFIX='$GITHUB_WORKSPACE/$INSTALL_PREFIX_NAME'
 
       - name: Checkout mdo-utils repository
         uses: actions/checkout@v2
@@ -35,7 +30,7 @@ jobs:
           pushd mdo-utils
           mkdir build
           pushd build
-          cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX
+          cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/$INSTALL_PREFIX
 
       - name: Compile mdo-utils
         shell: bash
@@ -63,7 +58,7 @@ jobs:
           pushd canary
           mkdir build
           pushd build
-          cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX
+          cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/$INSTALL_PREFIX
 
       - name: Compile
         shell: bash
@@ -84,4 +79,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: install-prefix
-          path: ${{ env.INSTALL_PREFIX_NAME }}
+          path: install-prefix
