@@ -11,11 +11,9 @@ on:
 jobs:
   continuous-integration:
     runs-on: ubuntu-latest
+    env:
+      INSTALL_PREFIX: '$GITHUB_WORKSPACE/install-prefix'
     steps:
-      - name: Setup environment variables
-        run: |
-          INSTALL_PREFIX="$GITHUB_WORKSPACE/install-prefix"
-
       - name: apt
         if: runner.os == 'Linux'
         run: |
@@ -48,10 +46,7 @@ jobs:
       - name: Install mdo-utils
         shell: bash
         working-directory: ./mdo-utils/build/
-        run: |
-          cmake --install .
-          popd # ~/mdo-utils/
-          popd # ~/
+        run: cmake --install .
 
       - name: Checkout main repository
         uses: actions/checkout@v2
