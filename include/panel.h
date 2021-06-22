@@ -5,7 +5,7 @@
 
 #include <mdo-utils/allocator.h>
 #include <mdo-utils/result.h>
-#include <wasm.h> /* for script API */
+#include <wasmtime.h> /* for script API */
 
 #include "draw_list.h"
 
@@ -47,10 +47,12 @@ canary_draw_list_t *canary_panel_get_draw_list (canary_panel_t *);
 
 /** @function canary_panel_set_color_cb
  */
-wasm_trap_t *canary_panel_set_color_cb (void *, const wasm_val_vec_t *,
-                                        wasm_val_vec_t *);
+wasm_trap_t *canary_panel_set_color_cb (void *, wasmtime_caller_t *caller,
+                                        const wasmtime_val_t *, size_t,
+                                        wasmtime_val_t *, size_t);
 
 /** @function canary_panel_draw_triangle_cb
  */
-wasm_trap_t *canary_panel_draw_triangle_cb (void *, const wasm_val_vec_t *,
-                                            wasm_val_vec_t *);
+wasm_trap_t *canary_panel_draw_triangle_cb (void *, wasmtime_caller_t *caller,
+                                            const wasmtime_val_t *, size_t,
+                                            wasmtime_val_t *, size_t);

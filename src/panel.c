@@ -63,10 +63,10 @@ canary_panel_get_draw_list (canary_panel_t *ui_panel)
 }
 
 static wasm_trap_t *
-get_panel (canary_script_t *ui_script, const wasm_val_t *self,
+get_panel (canary_script_t *ui_script, const wasmtime_val_t *self,
            canary_panel_t **ui_panel)
 {
-  if (self->kind != WASM_I32)
+  if (self->kind != WASMTIME_I32)
     {
       return canary_script_new_trap (ui_script, "self is not an i32");
     }
@@ -82,19 +82,20 @@ get_panel (canary_script_t *ui_script, const wasm_val_t *self,
 }
 
 wasm_trap_t *
-canary_panel_set_color_cb (void *env, const wasm_val_vec_t *args,
-                           wasm_val_vec_t *results)
+canary_panel_set_color_cb (void *env, wasmtime_caller_t *caller,
+                           const wasmtime_val_t *args, size_t arg_num,
+                           wasmtime_val_t *results, size_t result_num)
 {
   canary_panel_t *ui_panel;
-  wasm_trap_t *trap = get_panel (env, &args->data[0], &ui_panel);
+  wasm_trap_t *trap = get_panel (env, args, &ui_panel);
 
   if (!trap)
     {
       float color[4] = {
-        args->data[1].of.f32,
-        args->data[2].of.f32,
-        args->data[3].of.f32,
-        args->data[4].of.f32,
+        args[1].of.f32,
+        args[2].of.f32,
+        args[3].of.f32,
+        args[4].of.f32,
       };
 
       canary_panel_set_color (ui_panel, color);
@@ -104,7 +105,7 @@ canary_panel_set_color_cb (void *env, const wasm_val_vec_t *args,
 }
 
 static wasm_trap_t *
-get_draw_list (canary_script_t *ui_script, const wasm_val_t *panel,
+get_draw_list (canary_script_t *ui_script, const wasmtime_val_t *panel,
                canary_draw_list_t **ui_draw)
 {
   canary_panel_t *ui_panel;
@@ -125,7 +126,7 @@ get_draw_list (canary_script_t *ui_script, const wasm_val_t *panel,
 }
 
 static canary_draw_vertex_t
-make_vertex (const wasm_val_t *coord_args, float color[4])
+make_vertex (const wasmtime_val_t *coord_args, float color[4])
 {
   canary_draw_vertex_t vertex;
   vertex.position[0] = coord_args[0].of.f32;
@@ -135,24 +136,25 @@ make_vertex (const wasm_val_t *coord_args, float color[4])
 }
 
 wasm_trap_t *
-canary_panel_draw_triangle_cb (void *env, const wasm_val_vec_t *args,
-                               wasm_val_vec_t *results)
+canary_panel_draw_triangle_cb (void *env, wasmtime_caller_t *caller,
+                               const wasmtime_val_t *args, size_t arg_num,
+                               wasmtime_val_t *results, size_t result_num)
 {
   canary_draw_list_t *ui_draw;
-  wasm_trap_t *trap = get_draw_list (env, &args->data[0], &ui_draw);
+  wasm_trap_t *trap = get_draw_list (env, args, &ui_draw);
 
   if (trap)
     return trap;
 
   float color[4];
-  color[0] = args->data[7].of.f32;
-  color[1] = args->data[8].of.f32;
-  color[2] = args->data[9].of.f32;
-  color[3] = args->data[10].of.f32;
+  color[0] = args[7].of.f32;
+  color[1] = args[8].of.f32;
+  color[2] = args[9].of.f32;
+  color[3] = args[10].of.f32;
 
-  canary_draw_vertex_t vertex1 = make_vertex (&args->data[1], color);
-  canary_draw_vertex_t vertex2 = make_vertex (&args->data[3], color);
-  canary_draw_vertex_t vertex3 = make_vertex (&args->data[5], color);
+  canary_draw_vertex_t vertex1 = make_vertex (&args[1], color);
+  canary_draw_vertex_t vertex2 = make_vertex (&args[3], color);
+  canary_draw_vertex_t vertex3 = make_vertex (&args[5], color);
 
   canary_draw_index_t index1 = canary_draw_vertex (ui_draw, &vertex1);
   canary_draw_index_t index2 = canary_draw_vertex (ui_draw, &vertex2);

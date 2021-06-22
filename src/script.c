@@ -14,15 +14,13 @@ struct canary_script_s
   mdo_result_t wasm_trap_error;
 
   wasm_engine_t *engine;
-  wasm_store_t *store;
+  wasmtime_store_t *store;
+  wasmtime_context_t *context;
 
   wasmtime_linker_t *linker;
 
-  wasm_module_t *module;
-  wasm_exporttype_vec_t export_types;
-
-  wasm_instance_t *instance;
-  wasm_extern_vec_t instance_exports;
+  wasmtime_module_t *module;
+  wasmtime_instance_t instance;
 
   /* TODO(marceline-cramer): use mdo-utils vector */
   struct
@@ -62,7 +60,8 @@ log_wasm_trap (canary_script_t *ui_script, wasm_trap_t *trap)
 }
 
 static wasm_trap_t *
-env_abort_cb (void *env, const wasm_val_vec_t *args, wasm_val_vec_t *results)
+env_abort_cb (void *env, wasmtime_caller_t *caller, const wasmtime_val_t *args,
+              size_t arg_num, wasmtime_val_t *results, size_t result_num)
 {
   return NULL;
 }
@@ -75,27 +74,19 @@ finalizer_cb (void *env)
 static void
 link_function (canary_script_t *ui_script, const char *module,
                const char *symbol, wasm_functype_t *functype,
-               wasm_func_callback_with_env_t cb)
+               wasmtime_func_callback_t cb)
 {
-  wasm_name_t module_name;
-  wasm_name_new_from_string (&module_name, module);
-
-  wasm_name_t func_name;
-  wasm_name_new_from_string (&func_name, symbol);
-
   /* TODO(marceline-cramer): collect created funcs with vector and delete */
-  wasm_func_t *func = wasm_func_new_with_env (ui_script->store, functype, cb,
-                                              ui_script, finalizer_cb);
+  wasmtime_extern_t func_extern;
+  func_extern.kind = WASMTIME_EXTERN_FUNC;
+  wasmtime_func_new (ui_script->context, functype, cb, ui_script, finalizer_cb,
+                     &func_extern.of.func);
 
-  wasm_extern_t *func_extern = wasm_func_as_extern (func);
-
-  wasmtime_error_t *error = wasmtime_linker_define (
-      ui_script->linker, &module_name, &func_name, func_extern);
+  wasmtime_error_t *error
+      = wasmtime_linker_define (ui_script->linker, module, strlen (module),
+                                symbol, strlen (symbol), &func_extern);
   if (error)
     log_wasmtime_error (ui_script, error);
-
-  wasm_name_delete (&module_name);
-  wasm_name_delete (&func_name);
 }
 
 mdo_result_t
@@ -108,10 +99,6 @@ canary_script_create (canary_script_t **ui_script,
 
   new_ui_script->alloc = alloc;
   new_ui_script->module = NULL;
-  new_ui_script->instance = NULL;
-
-  wasm_exporttype_vec_new_empty (&new_ui_script->export_types);
-  wasm_extern_vec_new_empty (&new_ui_script->instance_exports);
 
   new_ui_script->panels.capacity = 16;
   new_ui_script->panels.vals = mdo_allocator_calloc (
@@ -134,11 +121,14 @@ canary_script_create (canary_script_t **ui_script,
   if (!new_ui_script->engine)
     return LOG_RESULT (wasm_error, "failed to create engine");
 
-  new_ui_script->store = wasm_store_new (new_ui_script->engine);
+  new_ui_script->store
+      = wasmtime_store_new (new_ui_script->engine, NULL, finalizer_cb);
   if (!new_ui_script->store)
     return LOG_RESULT (wasm_error, "failed to create store");
 
-  new_ui_script->linker = wasmtime_linker_new (new_ui_script->store);
+  new_ui_script->context = wasmtime_store_context (new_ui_script->store);
+
+  new_ui_script->linker = wasmtime_linker_new (new_ui_script->engine);
   if (!new_ui_script->linker)
     return LOG_RESULT (wasmtime_error, "failed to create linker");
 
@@ -219,7 +209,8 @@ canary_script_load (canary_script_t *ui_script, const char *filename)
   fclose (f);
 
   wasmtime_error_t *wasmtime_error = wasmtime_module_new (
-      ui_script->engine, &file_contents, &ui_script->module);
+      ui_script->engine, (const uint8_t *)file_contents.data,
+      file_contents.size, &ui_script->module);
   mdo_allocator_free (alloc, file_contents.data);
 
   if (wasmtime_error)
@@ -228,24 +219,16 @@ canary_script_load (canary_script_t *ui_script, const char *filename)
   if (!ui_script->module)
     return LOG_RESULT (wasm_error, "failed to compile UI script");
 
-  wasm_exporttype_vec_delete (&ui_script->export_types);
-  wasm_module_exports (ui_script->module, &ui_script->export_types);
-
   wasm_trap_t *trap = NULL;
   wasmtime_error = wasmtime_linker_instantiate (
-      ui_script->linker, ui_script->module, &ui_script->instance, &trap);
+      ui_script->linker, ui_script->context, ui_script->module,
+      &ui_script->instance, &trap);
 
   if (wasmtime_error)
     return log_wasmtime_error (ui_script, wasmtime_error);
 
   if (trap)
     return log_wasm_trap (ui_script, trap);
-
-  if (!ui_script->instance)
-    return LOG_RESULT (wasm_error, "failed to instantiate module");
-
-  wasm_extern_vec_delete (&ui_script->instance_exports);
-  wasm_instance_exports (ui_script->instance, &ui_script->instance_exports);
 
   return MDO_SUCCESS;
 }
@@ -259,23 +242,14 @@ canary_script_delete (canary_script_t *ui_script)
   if (ui_script->panels.vals)
     mdo_allocator_free (alloc, ui_script->panels.vals);
 
-  if (ui_script->instance)
-    {
-      wasm_extern_vec_delete (&ui_script->instance_exports);
-      wasm_instance_delete (ui_script->instance);
-    }
-
   if (ui_script->module)
-    {
-      wasm_exporttype_vec_delete (&ui_script->export_types);
-      wasm_module_delete (ui_script->module);
-    }
+    wasmtime_module_delete (ui_script->module);
 
   if (ui_script->linker)
     wasmtime_linker_delete (ui_script->linker);
 
   if (ui_script->store)
-    wasm_store_delete (ui_script->store);
+    wasmtime_store_delete (ui_script->store);
 
   if (ui_script->engine)
     wasm_engine_delete (ui_script->engine);
@@ -286,34 +260,34 @@ canary_script_delete (canary_script_t *ui_script)
 wasm_trap_t *
 canary_script_new_trap (canary_script_t *ui_script, const char *message)
 {
-  wasm_message_t wasm_message;
-  wasm_name_new_from_string_nt (&wasm_message, message);
-  return wasm_trap_new (ui_script->store, &wasm_message);
+  return wasmtime_trap_new (message, strlen (message));
 }
 
-static wasm_func_t *
-get_callback (canary_script_t *ui_script, const char *symbol)
+static bool
+get_callback (canary_script_t *ui_script, const char *symbol,
+              wasmtime_func_t *func)
 {
   size_t symbol_len = strlen (symbol);
 
-  for (size_t i = 0; i < ui_script->instance_exports.size; i++)
+  wasmtime_extern_t exported;
+
+  if (!wasmtime_instance_export_get (ui_script->context, &ui_script->instance,
+                                     symbol, symbol_len, &exported))
     {
-      wasm_exporttype_t *export_type = ui_script->export_types.data[i];
-      const wasm_name_t *export_name = wasm_exporttype_name (export_type);
 
-      wasm_extern_t *exported = ui_script->instance_exports.data[i];
-      wasm_externkind_t extern_kind = wasm_extern_kind (exported);
-
-      if (extern_kind != WASM_EXTERN_FUNC)
-        continue;
-
-      if (strncmp (export_name->data, symbol, symbol_len) != 0)
-        continue;
-
-      return wasm_extern_as_func (exported);
+      LOG_ERR ("could not find callback '%s'", symbol);
+      return false;
     }
 
-  return NULL;
+  if (exported.kind != WASMTIME_EXTERN_FUNC)
+    {
+      LOG_ERR ("export '%s' is not a function", symbol);
+      return false;
+    }
+
+  *func = exported.of.func;
+
+  return true;
 }
 
 mdo_result_t
@@ -324,16 +298,19 @@ canary_script_bind_panel (canary_script_t *ui_script, canary_panel_t *ui_panel,
   *panel_key = ui_script->panels.size++;
   ui_script->panels.vals[*panel_key] = ui_panel;
 
-  wasm_func_t *bind_panel_cb = get_callback (ui_script, "bind_panel");
+  wasmtime_func_t bind_panel_cb;
+  if (!get_callback (ui_script, "bind_panel", &bind_panel_cb))
+    return LOG_RESULT (ui_script->wasmtime_error,
+                       "couldn't get bind_panel callback");
 
-  wasm_val_vec_t args, results;
+  wasmtime_val_t args[]
+      = { { .kind = WASM_I32, .of = { .i32 = *panel_key } } };
 
-  wasm_val_vec_new_uninitialized (&args, 1);
-  args.data[0] = (wasm_val_t)WASM_I32_VAL (*panel_key);
+  wasmtime_val_t results[1];
 
-  wasm_val_vec_new_uninitialized (&results, 1);
-
-  wasm_trap_t *trap = wasm_func_call (bind_panel_cb, &args, &results);
+  wasm_trap_t *trap = NULL;
+  wasmtime_func_call (ui_script->context, &bind_panel_cb, args, 1, results, 1,
+                      &trap);
 
   if (trap)
     return log_wasm_trap (ui_script, trap);
