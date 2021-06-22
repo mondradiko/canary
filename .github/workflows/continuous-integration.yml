@@ -34,15 +34,15 @@ jobs:
           pushd mdo-utils # ~/mdo-utils/
           mkdir build
           pushd build # ~/mdo-utils/build/
-          cmake .. -DENABLE_TESTS=ON -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX
+          cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX
 
       - name: Compile mdo-utils
         shell: bash
         run: cmake --build .
 
-      - name: Test mdo-utils
-        shell: bash
-        run: cmake --test .
+      # - name: Test mdo-utils
+      #   shell: bash
+      #   run: cmake --test .
 
       - name: Install mdo-utils
         shell: bash
