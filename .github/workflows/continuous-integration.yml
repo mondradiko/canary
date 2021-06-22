@@ -20,7 +20,9 @@ jobs:
 
       - name: apt
         if: runner.os == 'Linux'
-        run: sudo apt install libcmocka-dev libvulkan-dev libsdl2-dev
+        run: |
+          sudo apt update # fixes install call
+          sudo apt install libcmocka-dev libvulkan-dev libsdl2-dev
 
       - name: Checkout mdo-utils repository
         uses: actions/checkout@v2
