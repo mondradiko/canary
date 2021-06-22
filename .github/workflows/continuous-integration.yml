@@ -16,6 +16,10 @@ jobs:
         run: |
           INSTALL_PREFIX="$GITHUB_WORKSPACE/install-prefix"
 
+      - name: apt
+        if: runner.os == 'Linux'
+        run: sudo apt install libcmocka-dev libvulkan-dev libsdl2-dev
+
       - name: Checkout mdo-utils repository
         uses: actions/checkout@v2
         with:
