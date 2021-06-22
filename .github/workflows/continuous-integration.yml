@@ -61,7 +61,7 @@ jobs:
           pushd canary
           mkdir build
           pushd build
-          cmake .. -GNinja -DENABLE_TESTS=ON -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX
+          cmake .. -GNinja -DENABLE_TESTS=ON -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/$INSTALL_PREFIX
 
       - name: Compile
         shell: bash
