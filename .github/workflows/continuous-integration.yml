@@ -1,5 +1,13 @@
 name: continuous-integration
-on: [push, pull_request]
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
 jobs:
   continuous-integration:
     runs-on: ubuntu-latest
@@ -11,6 +19,7 @@ jobs:
       - name: Checkout mdo-utils repository
         uses: actions/checkout@v2
         with:
+          repository: 'mondradiko/mdo-utils'
           path: 'mdo-utils'
 
       - name: Configure mdo-utils
