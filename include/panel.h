@@ -41,18 +41,3 @@ void canary_panel_set_draw_list (canary_panel_t *, canary_draw_list_t *);
  */
 canary_draw_list_t *canary_panel_get_draw_list (canary_panel_t *);
 
-/*******************************************************************************
- * Scripting API
- ******************************************************************************/
-
-/** @function canary_panel_set_color_cb
- */
-wasm_trap_t *canary_panel_set_color_cb (void *, wasmtime_caller_t *caller,
-                                        const wasmtime_val_t *, size_t,
-                                        wasmtime_val_t *, size_t);
-
-/** @function canary_panel_draw_triangle_cb
- */
-wasm_trap_t *canary_panel_draw_triangle_cb (void *, wasmtime_caller_t *caller,
-                                            const wasmtime_val_t *, size_t,
-                                            wasmtime_val_t *, size_t);

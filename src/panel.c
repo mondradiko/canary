@@ -5,7 +5,7 @@
 
 #include <string.h> /* for memcpy */
 
-#include "script.h"
+#include "api.h"
 
 struct canary_panel_s
 {
@@ -81,10 +81,7 @@ get_panel (canary_script_t *ui_script, const wasmtime_val_t *self,
   return NULL;
 }
 
-wasm_trap_t *
-canary_panel_set_color_cb (void *env, wasmtime_caller_t *caller,
-                           const wasmtime_val_t *args, size_t arg_num,
-                           wasmtime_val_t *results, size_t result_num)
+SCRIPT_CALLBACK (canary_panel_set_color_cb)
 {
   canary_panel_t *ui_panel;
   wasm_trap_t *trap = get_panel (env, args, &ui_panel);
@@ -135,10 +132,7 @@ make_vertex (const wasmtime_val_t *coord_args, float color[4])
   return vertex;
 }
 
-wasm_trap_t *
-canary_panel_draw_triangle_cb (void *env, wasmtime_caller_t *caller,
-                               const wasmtime_val_t *args, size_t arg_num,
-                               wasmtime_val_t *results, size_t result_num)
+SCRIPT_CALLBACK (canary_panel_draw_triangle_cb)
 {
   canary_draw_list_t *ui_draw;
   wasm_trap_t *trap = get_draw_list (env, args, &ui_draw);
