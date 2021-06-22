@@ -94,6 +94,54 @@ get_panel (canary_script_t *ui_script, const wasmtime_val_t *self,
   return NULL;
 }
 
+SCRIPT_CALLBACK (canary_panel_get_width_cb)
+{
+  canary_panel_t *ui_panel;
+  wasm_trap_t *trap = get_panel (env, args, &ui_panel);
+
+  if (!trap)
+    {
+      float size[2];
+      canary_panel_get_size (ui_panel, size);
+      results[0].of.f32 = size[0];
+    }
+
+  return trap;
+}
+
+SCRIPT_CALLBACK (canary_panel_get_height_cb)
+{
+  canary_panel_t *ui_panel;
+  wasm_trap_t *trap = get_panel (env, args, &ui_panel);
+
+  if (!trap)
+    {
+      float size[2];
+      canary_panel_get_size (ui_panel, size);
+      results[0].of.f32 = size[1];
+    }
+
+  return trap;
+}
+
+SCRIPT_CALLBACK (canary_panel_set_size_cb)
+{
+  canary_panel_t *ui_panel;
+  wasm_trap_t *trap = get_panel (env, args, &ui_panel);
+
+  if (!trap)
+    {
+      float size[2] = {
+        args[1].of.f32,
+        args[2].of.f32,
+      };
+
+      canary_panel_set_size (ui_panel, size);
+    }
+
+  return trap;
+}
+
 SCRIPT_CALLBACK (canary_panel_set_color_cb)
 {
   canary_panel_t *ui_panel;
