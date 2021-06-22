@@ -12,6 +12,7 @@ struct canary_panel_s
   const mdo_allocator_t *alloc;
 
   float color[4];
+  float size[2];
 
   canary_draw_list_t *draw_list;
 };
@@ -47,6 +48,18 @@ void
 canary_panel_get_color (canary_panel_t *ui_panel, float color[4])
 {
   memcpy (color, ui_panel->color, sizeof (float) * 4);
+}
+
+void
+canary_panel_set_size (canary_panel_t *panel, const float size[2])
+{
+  memcpy (panel->size, size, sizeof (float) * 2);
+}
+
+void
+canary_panel_get_size (canary_panel_t *panel, float size[2])
+{
+  memcpy (size, panel->size, sizeof (float) * 2);
 }
 
 void
