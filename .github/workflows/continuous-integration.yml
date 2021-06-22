@@ -1,0 +1,82 @@
+name: continuous-integration
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  INSTALL_PREFIX: 'install-prefix'
+
+jobs:
+  continuous-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup ninja-build
+        uses: mondradiko/gha-setup-ninja@v3
+
+      - name: Checkout mdo-utils repository
+        uses: actions/checkout@v2
+        with:
+          repository: 'mondradiko/mdo-utils'
+          path: 'mdo-utils'
+
+      - name: Configure mdo-utils
+        shell: bash
+        run: |
+          pushd mdo-utils
+          mkdir build
+          pushd build
+          cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/$INSTALL_PREFIX
+
+      - name: Compile mdo-utils
+        shell: bash
+        working-directory: ./mdo-utils/build/
+        run: cmake --build .
+
+      # - name: Test mdo-utils
+      #   shell: bash
+      #   run: cmake --test .
+
+      - name: Install mdo-utils
+        shell: bash
+        working-directory: ./mdo-utils/build/
+        run: cmake --install .
+
+      - name: Checkout main repository
+        uses: actions/checkout@v2
+        with:
+          path: 'canary'
+          submodules: 'true'
+
+      - name: Configure
+        shell: bash
+        run: |
+          pushd canary
+          mkdir build
+          pushd build
+          cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/$INSTALL_PREFIX
+
+      - name: Compile
+        shell: bash
+        working-directory: ./canary/build/
+        run: cmake --build .
+
+      # - name: Test
+      #  shell: bash
+      #  working-directory: ./canary/build/
+      #  run: ctest .
+
+      - name: Install
+        shell: bash
+        working-directory: ./canary/build/
+        run: cmake --install .
+
+      - name: Upload install prefix artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: install-prefix
+          path: install-prefix
