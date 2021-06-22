@@ -4,7 +4,7 @@
 #include <string.h> /* for strlen, strncmp */
 #include <wasmtime.h>
 
-#include "panel.h"
+#include "panel-api.h"
 
 struct canary_script_s
 {
