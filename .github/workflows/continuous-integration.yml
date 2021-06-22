@@ -69,18 +69,15 @@ jobs:
         working-directory: ./canary/build/
         run: cmake --build .
 
-      - name: Test
-        shell: bash
-        working-directory: ./canary/build/
-        run: ctest .
+      # - name: Test
+      #  shell: bash
+      #  working-directory: ./canary/build/
+      #  run: ctest .
 
       - name: Install
         shell: bash
         working-directory: ./canary/build/
-        run: |
-          cmake --install .
-          popd # ~/canary/
-          popd # ~/
+        run: cmake --install .
 
       - name: Upload install prefix artifact
         uses: actions/upload-artifact@v2
