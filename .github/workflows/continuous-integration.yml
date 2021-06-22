@@ -8,11 +8,12 @@ on:
     branches:
       - main
 
+env:
+  INSTALL_PREFIX: 'install-prefix'
+
 jobs:
   continuous-integration:
     runs-on: ubuntu-latest
-    env:
-      INSTALL_PREFIX: '${{ env.GITHUB_WORKSPACE }}/install-prefix'
     steps:
       - name: apt
         if: runner.os == 'Linux'
@@ -32,7 +33,7 @@ jobs:
           pushd mdo-utils
           mkdir build
           pushd build
-          cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX
+          cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/$INSTALL_PREFIX
 
       - name: Compile mdo-utils
         shell: bash
