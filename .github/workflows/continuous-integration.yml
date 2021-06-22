@@ -15,12 +15,8 @@ jobs:
   continuous-integration:
     runs-on: ubuntu-latest
     steps:
-      - name: apt
-        if: runner.os == 'Linux'
-        run: |
-          # sudo apt update # seems to be necessary to install packages
-          # sudo apt install ninja-build libcmocka-dev libvulkan-dev libsdl2-dev
-          sudo apt install ninja-build
+      - name: Setup ninja-build
+        uses: mondradiko/gha-setup-ninja@v3
 
       - name: Checkout mdo-utils repository
         uses: actions/checkout@v2
