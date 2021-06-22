@@ -1,0 +1,26 @@
+name: continuous-integration
+on: [push, pull_request]
+jobs:
+  continuous-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+
+      - name: Configure
+        shell: bash
+        run: |
+          mkdir build
+          pushd build
+          cmake -DENABLE_TESTS=ON ..
+
+      - name: Compile
+        shell: bash
+        run: cmake --build .
+
+      - name: Test
+        shell: bash
+        run: ctest .
+
