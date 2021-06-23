@@ -1,4 +1,4 @@
-/** @file ui_draw_list.h
+/** @file draw_list.h
  */
 
 #pragma once
@@ -25,7 +25,7 @@ typedef struct canary_draw_vertex_s
 typedef uint32_t canary_draw_index_t;
 
 /** @typedef canary_draw_list_create
- * @param ui_draw
+ * @param draw_list
  * @param alloc
  * @return #mdo_result_t.
  */
