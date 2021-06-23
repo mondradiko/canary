@@ -275,28 +275,49 @@ surface in 3D space. See [panel attributes](#attributes).
 
 # Widgets
 
-## Widget Definitions
+Widgets are UI elements that are placed on [panels](#ui-panels) to give the user
+points of interaction and information. Widgets are configured and created by the
+host environment, then passed by Canary into the
+[scripting implementation](#scripting), which implements all of the behavior of
+a widget, including [rendering](#rendering), animations, and event handling.
 
-## Widget Design Process
+## Widget Definitions
 
 Although scripts have authority when it comes to the appearance and behavior of
 each widget, the widgets themselves need to have some standard format that both
-the script and the host can agree upon. This requires striking a very fine
-balance in the design of each widget between how much flexibility the scripts
-are allowed to have and how much control the host environment has to lay out UI
-elements the way that it needs to. If scripts are given too much authority, then
-the UI as a whole becomes less consistent and therefore less usable. If the host
-environment is given too much authority, then scripts have less room for
-customization.
+the script and the host can agree upon.
+
+Each widget has a definition, made up of a plain C structure defining all of the
+initial properties of a widget. Widgets are created using this structure as the
+parameters for that widget's creation.
+
+Once a widget is created, the properties set in the definition can't be changed.
+However, additional framework features may be added to explicitly modify some
+properties after instantiation. For example, the text in a static text label may
+need to be updated by the host environment to reflect a status change. The
+script would need to dynamically react to these state changes. It is for this
+reason that widget properties are immutable by default; to lift responsibility
+off of script authors.
+
+## Widget Design Process
+
+This requires striking a very fine balance in the design of each widget between
+how much flexibility the scripts are allowed to have and how much control the
+host environment has to lay out UI elements the way that it needs to. If scripts
+are given too much authority, then the UI as a whole becomes less consistent and
+therefore less usable. If the host environment is given too much authority, then
+scripts have less room for customization.
 
 To strike this balance, the widget definitions are designed based on the needs
 of the general userbase, and are expected to change incrementally and
 frequently. Widgets are community-driven. This sort of approach to UI design
 would not work without an open source, highly modifiable framework like Canary.
 
-## Bins
-
 ## Widget Types
+
+> TODO(marceline-cramer): use this list to open a discussion for which widgets
+> to make first, make them into dedicated header subsections, then open design
+> issues.
 
 Here are some ideas for potential widget types:
 
@@ -309,8 +330,14 @@ Here are some ideas for potential widget types:
 - radio box (drop-down selector)
 - slider
 - text input (see [Keyboard](#keyboard))
+- status bar
 
 ## Container Types
+
+> NOTE(marceline-cramer): containers are low-priority for now. all widgets will
+> be placed in a flat DOM until UIs are complex enough to justify containers.
+
+> TODO(marceline-cramer): add section on "bins"
 
 Containers are widgets that contain other widgets.
 Here are some ideas for potential container types:
