@@ -124,6 +124,16 @@ Future attributes:
 - horizontal/vertical curve (expressed as radians)
 - corner rounding (one radius per corner)
 
+## Panel Classes
+
+> TODO(marceline-cramer): open discussion issue
+> TODO(marceline-cramer): are these necessary or nah?
+
+Ideas for panel classes:
+
+- dialog box (title, message, OK button)
+- confirmation box (title, message, yes/no buttons)
+
 # Spaces
 
 Canary operates in four different spaces: panel space, world space, stage space,
@@ -262,6 +272,53 @@ surface in 3D space. See [panel attributes](#attributes).
 ## Panel Geometry
 
 ## Keyboard
+
+# Widgets
+
+## Widget Definitions
+
+## Widget Design Process
+
+Although scripts have authority when it comes to the appearance and behavior of
+each widget, the widgets themselves need to have some standard format that both
+the script and the host can agree upon. This requires striking a very fine
+balance in the design of each widget between how much flexibility the scripts
+are allowed to have and how much control the host environment has to lay out UI
+elements the way that it needs to. If scripts are given too much authority, then
+the UI as a whole becomes less consistent and therefore less usable. If the host
+environment is given too much authority, then scripts have less room for
+customization.
+
+To strike this balance, the widget definitions are designed based on the needs
+of the general userbase, and are expected to change incrementally and
+frequently. Widgets are community-driven. This sort of approach to UI design
+would not work without an open source, highly modifiable framework like Canary.
+
+## Bins
+
+## Widget Types
+
+Here are some ideas for potential widget types:
+
+- button
+  * toggle button
+	* one-click button
+	* button with icon (see [Glyphs](#glyphs))
+	* duplicate widget types for circular/round buttons?
+- label (static text box)
+- radio box (drop-down selector)
+- slider
+- text input (see [Keyboard](#keyboard))
+
+## Container Types
+
+Containers are widgets that contain other widgets.
+Here are some ideas for potential container types:
+
+- tabbed view
+- scroll box (vertical/horizontal)
+- split panes (vertical/horizontal)
+- frame with optional label
 
 # Setup
 
