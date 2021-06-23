@@ -163,11 +163,11 @@ SCRIPT_CALLBACK (canary_panel_set_color_cb)
 }
 
 static wasm_trap_t *
-get_draw_list (canary_script_t *script, const wasmtime_val_t *panel,
+get_draw_list (canary_script_t *script, const wasmtime_val_t *self,
                canary_draw_list_t **draw_list)
 {
   canary_panel_t *panel;
-  wasm_trap_t *trap = get_panel (script, panel, &panel);
+  wasm_trap_t *trap = get_panel (script, self, &panel);
 
   if (trap)
     return trap;
@@ -176,8 +176,7 @@ get_draw_list (canary_script_t *script, const wasmtime_val_t *panel,
 
   if (!*draw_list)
     {
-      return canary_script_new_trap (script,
-                                     "panel has no current draw list");
+      return canary_script_new_trap (script, "panel has no current draw list");
     }
 
   return NULL;
