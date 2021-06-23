@@ -127,6 +127,7 @@ Future attributes:
 ## Panel Classes
 
 > TODO(marceline-cramer): open discussion issue
+
 > TODO(marceline-cramer): are these necessary or nah?
 
 Ideas for panel classes:
@@ -301,7 +302,7 @@ off of script authors.
 
 ## Widget Design Process
 
-This requires striking a very fine balance in the design of each widget between
+Canary must strike a very fine balance in the design of each widget between
 how much flexibility the scripts are allowed to have and how much control the
 host environment has to lay out UI elements the way that it needs to. If scripts
 are given too much authority, then the UI as a whole becomes less consistent and
@@ -337,7 +338,7 @@ Here are some ideas for potential widget types:
 > NOTE(marceline-cramer): containers are low-priority for now. all widgets will
 > be placed in a flat DOM until UIs are complex enough to justify containers.
 
-> TODO(marceline-cramer): add section on "bins"
+> TODO(marceline-cramer): add section on "bins."
 
 Containers are widgets that contain other widgets.
 Here are some ideas for potential container types:
