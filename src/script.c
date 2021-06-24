@@ -7,6 +7,12 @@
 
 #include "panel-api.h"
 
+typedef struct panel_entry_s
+{
+  canary_panel_t *panel;
+  uint32_t userdata;
+} panel_entry_t;
+
 struct canary_script_s
 {
   const mdo_allocator_t *alloc;
@@ -26,7 +32,7 @@ struct canary_script_s
   /* TODO(marceline-cramer): use mdo-utils vector */
   struct
   {
-    canary_panel_t **vals;
+    panel_entry_t *vals;
     size_t size;
     size_t capacity;
   } panels;
@@ -73,9 +79,8 @@ finalizer_cb (void *env)
 }
 
 static void
-link_function (canary_script_t *script, const char *module,
-               const char *symbol, wasm_functype_t *functype,
-               wasmtime_func_callback_t cb)
+link_function (canary_script_t *script, const char *module, const char *symbol,
+               wasm_functype_t *functype, wasmtime_func_callback_t cb)
 {
   /* TODO(marceline-cramer): collect created funcs with vector and delete */
   wasmtime_extern_t func_extern;
@@ -91,8 +96,7 @@ link_function (canary_script_t *script, const char *module,
 }
 
 mdo_result_t
-canary_script_create (canary_script_t **script,
-                      const mdo_allocator_t *alloc)
+canary_script_create (canary_script_t **script, const mdo_allocator_t *alloc)
 {
   canary_script_t *new_script
       = mdo_allocator_malloc (alloc, sizeof (canary_script_t));
@@ -103,7 +107,7 @@ canary_script_create (canary_script_t **script,
 
   new_script->panels.capacity = 16;
   new_script->panels.vals = mdo_allocator_calloc (
-      alloc, new_script->panels.capacity, sizeof (canary_panel_t *));
+      alloc, new_script->panels.capacity, sizeof (panel_entry_t));
   new_script->panels.size = 0;
 
   mdo_result_t wasm_error
@@ -229,8 +233,8 @@ canary_script_load (canary_script_t *script, const char *filename)
   fclose (f);
 
   wasmtime_error_t *wasmtime_error = wasmtime_module_new (
-      script->engine, (const uint8_t *)file_contents.data,
-      file_contents.size, &script->module);
+      script->engine, (const uint8_t *)file_contents.data, file_contents.size,
+      &script->module);
   mdo_allocator_free (alloc, file_contents.data);
 
   if (wasmtime_error)
@@ -240,9 +244,9 @@ canary_script_load (canary_script_t *script, const char *filename)
     return LOG_RESULT (wasm_error, "failed to compile UI script");
 
   wasm_trap_t *trap = NULL;
-  wasmtime_error = wasmtime_linker_instantiate (
-      script->linker, script->context, script->module,
-      &script->instance, &trap);
+  wasmtime_error
+      = wasmtime_linker_instantiate (script->linker, script->context,
+                                     script->module, &script->instance, &trap);
 
   if (wasmtime_error)
     return log_wasmtime_error (script, wasmtime_error);
@@ -310,13 +314,40 @@ get_callback (canary_script_t *script, const char *symbol,
   return true;
 }
 
+void
+canary_script_update (canary_script_t *script, float dt)
+{
+  wasmtime_func_t update_cb;
+  if (!get_callback (script, "update", &update_cb))
+    {
+      LOG_RESULT (script->wasmtime_error, "couldn't get update callback");
+      return;
+    }
+
+  wasmtime_val_t dt_arg;
+  dt_arg.kind = WASM_F32;
+  dt_arg.of.f32 = dt;
+
+  wasm_trap_t *trap = NULL;
+  wasmtime_error_t *error = wasmtime_func_call (script->context, &update_cb,
+                                                &dt_arg, 1, NULL, 0, &trap);
+
+  if (error)
+    log_wasmtime_error (script, error);
+
+  if (trap)
+    log_wasm_trap (script, trap);
+}
+
 mdo_result_t
 canary_script_bind_panel (canary_script_t *script, canary_panel_t *panel,
                           canary_panel_key_t *panel_key)
 {
   /* TODO(marceline-cramer): bounds checking, reallocation */
   *panel_key = script->panels.size++;
-  script->panels.vals[*panel_key] = panel;
+  panel_entry_t *entry = &script->panels.vals[*panel_key];
+
+  entry->panel = panel;
 
   wasmtime_func_t bind_panel_cb;
   if (!get_callback (script, "bind_panel", &bind_panel_cb))
@@ -329,11 +360,16 @@ canary_script_bind_panel (canary_script_t *script, canary_panel_t *panel,
   wasmtime_val_t results[1];
 
   wasm_trap_t *trap = NULL;
-  wasmtime_func_call (script->context, &bind_panel_cb, args, 1, results, 1,
-                      &trap);
+  wasmtime_error_t *error = wasmtime_func_call (
+      script->context, &bind_panel_cb, args, 1, results, 1, &trap);
+
+  if (error)
+    return log_wasmtime_error (script, error);
 
   if (trap)
     return log_wasm_trap (script, trap);
+
+  entry->userdata = results[0].of.i32;
 
   return MDO_SUCCESS;
 }
@@ -343,7 +379,7 @@ canary_script_unbind_panel (canary_script_t *script,
                             canary_panel_key_t panel_key)
 {
   /* TODO(marceline-cramer): bounds checking, reallocation */
-  script->panels.vals[panel_key] = NULL;
+  script->panels.vals[panel_key].panel = NULL;
 }
 
 canary_panel_t *
@@ -351,5 +387,5 @@ canary_script_lookup_panel (canary_script_t *script,
                             canary_panel_key_t panel_key)
 {
   /* TODO(marceline-cramer): bounds checking */
-  return script->panels.vals[panel_key];
+  return script->panels.vals[panel_key].panel;
 }

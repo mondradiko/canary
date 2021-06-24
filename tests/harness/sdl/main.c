@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL_timer.h>
 
 #include "draw_list.h"
 #include "panel.h"
@@ -120,8 +121,19 @@ run_harness (const char *filename)
 
   canary_panel_set_draw_list (panel, ui_draw);
 
+  double clock_frequency = SDL_GetPerformanceFrequency ();
+  uint64_t last_tick = SDL_GetPerformanceCounter ();
+
   while (!poll_sdl_events (window, panel))
-    vk_renderer_render_frame (renderer);
+    {
+      uint64_t this_tick = SDL_GetPerformanceCounter ();
+      float dt = ((double)(this_tick - last_tick)) / clock_frequency;
+      last_tick = this_tick;
+
+      canary_draw_list_clear (ui_draw);
+      canary_script_update (ui_script, dt);
+      vk_renderer_render_frame (renderer);
+    }
 
 error:
   if (renderer)
