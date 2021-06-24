@@ -310,6 +310,24 @@ get_callback (canary_script_t *script, const char *symbol,
   return true;
 }
 
+void
+canary_script_update (canary_script_t *script, float dt)
+{
+  wasmtime_func_t update_cb;
+  if (!get_callback (script, "update", &update_cb))
+    return;
+
+  wasmtime_val_t args[] = {{.kind = WASM_F32, .of = {.f32 = dt}}};
+
+  wasmtime_val_t results[1];
+
+  wasm_trap_t* trap = NULL;
+  wasmtime_func_call (script->context, &update_cb, args, 1, results, 1, &trap);
+
+  if (trap)
+    log_wasm_trap (script, trap);
+}
+
 mdo_result_t
 canary_script_bind_panel (canary_script_t *script, canary_panel_t *panel,
                           canary_panel_key_t *panel_key)
