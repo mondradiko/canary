@@ -58,6 +58,13 @@ canary_draw_list_delete (canary_draw_list_t *draw_list)
   mdo_allocator_free (alloc, draw_list);
 }
 
+void
+canary_draw_list_clear (canary_draw_list_t *draw_list)
+{
+  draw_list->vertices.size = 0;
+  draw_list->indices.size = 0;
+}
+
 canary_draw_index_t
 canary_draw_vertex (canary_draw_list_t *draw_list,
                     const canary_draw_vertex_t *vertex)
