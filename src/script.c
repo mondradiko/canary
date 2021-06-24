@@ -7,6 +7,12 @@
 
 #include "panel-api.h"
 
+typedef struct panel_entry_s
+{
+  canary_panel_t *panel;
+  uint32_t userdata;
+} panel_entry_t;
+
 struct canary_script_s
 {
   const mdo_allocator_t *alloc;
@@ -26,7 +32,7 @@ struct canary_script_s
   /* TODO(marceline-cramer): use mdo-utils vector */
   struct
   {
-    canary_panel_t **vals;
+    panel_entry_t *vals;
     size_t size;
     size_t capacity;
   } panels;
@@ -103,7 +109,7 @@ canary_script_create (canary_script_t **script,
 
   new_script->panels.capacity = 16;
   new_script->panels.vals = mdo_allocator_calloc (
-      alloc, new_script->panels.capacity, sizeof (canary_panel_t *));
+      alloc, new_script->panels.capacity, sizeof (panel_entry_t));
   new_script->panels.size = 0;
 
   mdo_result_t wasm_error
@@ -334,7 +340,9 @@ canary_script_bind_panel (canary_script_t *script, canary_panel_t *panel,
 {
   /* TODO(marceline-cramer): bounds checking, reallocation */
   *panel_key = script->panels.size++;
-  script->panels.vals[*panel_key] = panel;
+  panel_entry_t *entry = &script->panels.vals[*panel_key];
+
+  entry->panel = panel;
 
   wasmtime_func_t bind_panel_cb;
   if (!get_callback (script, "bind_panel", &bind_panel_cb))
@@ -353,6 +361,8 @@ canary_script_bind_panel (canary_script_t *script, canary_panel_t *panel,
   if (trap)
     return log_wasm_trap (script, trap);
 
+  entry->userdata = results[0].of.i32;
+
   return MDO_SUCCESS;
 }
 
@@ -361,7 +371,7 @@ canary_script_unbind_panel (canary_script_t *script,
                             canary_panel_key_t panel_key)
 {
   /* TODO(marceline-cramer): bounds checking, reallocation */
-  script->panels.vals[panel_key] = NULL;
+  script->panels.vals[panel_key].panel = NULL;
 }
 
 canary_panel_t *
@@ -369,5 +379,5 @@ canary_script_lookup_panel (canary_script_t *script,
                             canary_panel_key_t panel_key)
 {
   /* TODO(marceline-cramer): bounds checking */
-  return script->panels.vals[panel_key];
+  return script->panels.vals[panel_key].panel;
 }
