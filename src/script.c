@@ -79,9 +79,8 @@ finalizer_cb (void *env)
 }
 
 static void
-link_function (canary_script_t *script, const char *module,
-               const char *symbol, wasm_functype_t *functype,
-               wasmtime_func_callback_t cb)
+link_function (canary_script_t *script, const char *module, const char *symbol,
+               wasm_functype_t *functype, wasmtime_func_callback_t cb)
 {
   /* TODO(marceline-cramer): collect created funcs with vector and delete */
   wasmtime_extern_t func_extern;
@@ -97,8 +96,7 @@ link_function (canary_script_t *script, const char *module,
 }
 
 mdo_result_t
-canary_script_create (canary_script_t **script,
-                      const mdo_allocator_t *alloc)
+canary_script_create (canary_script_t **script, const mdo_allocator_t *alloc)
 {
   canary_script_t *new_script
       = mdo_allocator_malloc (alloc, sizeof (canary_script_t));
@@ -235,8 +233,8 @@ canary_script_load (canary_script_t *script, const char *filename)
   fclose (f);
 
   wasmtime_error_t *wasmtime_error = wasmtime_module_new (
-      script->engine, (const uint8_t *)file_contents.data,
-      file_contents.size, &script->module);
+      script->engine, (const uint8_t *)file_contents.data, file_contents.size,
+      &script->module);
   mdo_allocator_free (alloc, file_contents.data);
 
   if (wasmtime_error)
@@ -246,9 +244,9 @@ canary_script_load (canary_script_t *script, const char *filename)
     return LOG_RESULT (wasm_error, "failed to compile UI script");
 
   wasm_trap_t *trap = NULL;
-  wasmtime_error = wasmtime_linker_instantiate (
-      script->linker, script->context, script->module,
-      &script->instance, &trap);
+  wasmtime_error
+      = wasmtime_linker_instantiate (script->linker, script->context,
+                                     script->module, &script->instance, &trap);
 
   if (wasmtime_error)
     return log_wasmtime_error (script, wasmtime_error);
@@ -321,14 +319,21 @@ canary_script_update (canary_script_t *script, float dt)
 {
   wasmtime_func_t update_cb;
   if (!get_callback (script, "update", &update_cb))
-    return;
+    {
+      LOG_RESULT (script->wasmtime_error, "couldn't get update callback");
+      return;
+    }
 
-  wasmtime_val_t args[] = {{.kind = WASM_F32, .of = {.f32 = dt}}};
+  wasmtime_val_t dt_arg;
+  dt_arg.kind = WASM_F32;
+  dt_arg.of.f32 = dt;
 
-  wasmtime_val_t results[1];
+  wasm_trap_t *trap = NULL;
+  wasmtime_error_t *error = wasmtime_func_call (script->context, &update_cb,
+                                                &dt_arg, 1, NULL, 0, &trap);
 
-  wasm_trap_t* trap = NULL;
-  wasmtime_func_call (script->context, &update_cb, args, 1, results, 1, &trap);
+  if (error)
+    log_wasmtime_error (script, error);
 
   if (trap)
     log_wasm_trap (script, trap);
@@ -355,8 +360,11 @@ canary_script_bind_panel (canary_script_t *script, canary_panel_t *panel,
   wasmtime_val_t results[1];
 
   wasm_trap_t *trap = NULL;
-  wasmtime_func_call (script->context, &bind_panel_cb, args, 1, results, 1,
-                      &trap);
+  wasmtime_error_t *error = wasmtime_func_call (
+      script->context, &bind_panel_cb, args, 1, results, 1, &trap);
+
+  if (error)
+    return log_wasmtime_error (script, error);
 
   if (trap)
     return log_wasm_trap (script, trap);
