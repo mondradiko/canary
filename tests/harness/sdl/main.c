@@ -95,8 +95,7 @@ run_harness (const char *filename)
   canary_panel_set_draw_list (panel, ui_draw);
 
   canary_panel_key_t panel_key;
-  result = canary_script_bind_panel (ui_script, panel, &panel_key);
-  if (!mdo_result_success (result))
+  if (canary_script_bind_panel (ui_script, panel, &panel_key))
     {
       LOG_ERR ("failed to bind UI panel");
       error_code = 1;
