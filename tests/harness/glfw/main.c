@@ -38,7 +38,7 @@ run_harness (const char *filename)
   glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
   glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
 
-  window = glfwCreateWindow (800, 600, "ES Test", NULL, NULL);
+  window = glfwCreateWindow (800, 600, "Canary Test Harness", NULL, NULL);
   if (!window)
     {
       error_code = log_error ("failed to create window");
