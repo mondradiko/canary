@@ -99,10 +99,21 @@ run_harness (const char *filename)
       goto error;
     }
 
+  double last_tick = glfwGetTime ();
+
   while (!glfwWindowShouldClose (window))
     {
       glfwPollEvents ();
+
+      double this_tick = glfwGetTime ();
+      float dt = this_tick - last_tick;
+      last_tick = this_tick;
+
+      canary_draw_list_clear (draw_list);
+      canary_script_update (script, dt);
+
       glClear (GL_COLOR_BUFFER_BIT);
+      gles_renderer_render_frame (ren);
       glfwSwapBuffers (window);
     }
 
