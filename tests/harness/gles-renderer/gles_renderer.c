@@ -26,3 +26,8 @@ gles_renderer_delete (gles_renderer_t *ren)
 {
   free (ren);
 }
+
+void
+gles_renderer_render_frame (gles_renderer_t *ren)
+{
+}

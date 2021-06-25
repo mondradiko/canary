@@ -19,3 +19,8 @@ int gles_renderer_create (gles_renderer_t **, canary_panel_t *);
  * @param ren
  */
 void gles_renderer_delete (gles_renderer_t *);
+
+/** @function gles_renderer_render_frame
+ * @param ren
+ */
+void gles_renderer_render_frame (gles_renderer_t *);
