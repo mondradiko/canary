@@ -146,6 +146,9 @@ gles_renderer_render_frame (gles_renderer_t *ren)
   size_t index_count = canary_draw_list_index_count (draw_list);
   canary_draw_index_t *indices = canary_draw_list_index_buffer (draw_list);
 
+  glEnable (GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   glUseProgram (ren->program);
 
   glBindBuffer (GL_ARRAY_BUFFER, ren->vbo);
