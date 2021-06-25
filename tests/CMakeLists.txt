@@ -11,9 +11,10 @@ endif ()
 
 if (BUILD_GLES_RENDERER)
   add_library (gles-renderer STATIC harness/gles-renderer/gles_renderer.c)
+  target_include_directories (gles-renderer PUBLIC harness/gles-renderer)
 
   # TODO(marceline-cramer): this is hardcoded for my system; find loader lib
-  target_link_libraries (gles-renderer GLESv2)
+  target_link_libraries (gles-renderer ${CANARY_OBJ} GLESv2)
 endif ()
 
 if (ENABLE_GLFW_HARNESS)
