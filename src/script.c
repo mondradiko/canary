@@ -38,32 +38,26 @@ struct canary_script_s
   } panels;
 };
 
-static mdo_result_t
+static int
 log_wasmtime_error (canary_script_t *script, wasmtime_error_t *error)
 {
   wasm_byte_vec_t error_message;
   wasmtime_error_message (error, &error_message);
   wasmtime_error_delete (error);
-
-  mdo_result_t result = script->wasmtime_error;
-  mdo_result_t logged = LOG_RESULT (result, error_message.data);
+  LOG_ERR ("%.*s", error_message.size, error_message.data);
   wasm_byte_vec_delete (&error_message);
-
-  return logged;
+  return -1;
 }
 
-static mdo_result_t
+static int
 log_wasm_trap (canary_script_t *script, wasm_trap_t *trap)
 {
   wasm_byte_vec_t trap_message;
   wasm_trap_message (trap, &trap_message);
   wasm_trap_delete (trap);
-
-  mdo_result_t result = script->wasm_trap_error;
-  mdo_result_t logged = LOG_RESULT (result, trap_message.data);
+  LOG_ERR ("%.*s", trap_message.size, trap_message.data);
   wasm_byte_vec_delete (&trap_message);
-
-  return logged;
+  return -1;
 }
 
 static wasm_trap_t *
@@ -339,7 +333,7 @@ canary_script_update (canary_script_t *script, float dt)
     log_wasm_trap (script, trap);
 }
 
-mdo_result_t
+int
 canary_script_bind_panel (canary_script_t *script, canary_panel_t *panel,
                           canary_panel_key_t *panel_key)
 {
@@ -351,8 +345,10 @@ canary_script_bind_panel (canary_script_t *script, canary_panel_t *panel,
 
   wasmtime_func_t bind_panel_cb;
   if (!get_callback (script, "bind_panel", &bind_panel_cb))
-    return LOG_RESULT (script->wasmtime_error,
-                       "couldn't get bind_panel callback");
+    {
+      LOG_ERR ("couldn't get bind_panel callback");
+      return -1;
+    }
 
   wasmtime_val_t args[]
       = { { .kind = WASM_I32, .of = { .i32 = *panel_key } } };
@@ -371,7 +367,7 @@ canary_script_bind_panel (canary_script_t *script, canary_panel_t *panel,
 
   entry->userdata = results[0].of.i32;
 
-  return MDO_SUCCESS;
+  return 0;
 }
 
 void
