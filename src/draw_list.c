@@ -3,6 +3,8 @@
 
 #include "draw_list.h"
 
+#include <string.h> /* for memcpy */
+
 struct canary_draw_list_s
 {
   const mdo_allocator_t *alloc;
@@ -87,12 +89,40 @@ canary_draw_vertex (canary_draw_list_t *draw_list,
           sizeof (canary_draw_vertex_t) * draw_list->vertices.capacity);
     }
 
+  canary_draw_vertex_t *dst = &draw_list->vertices.vals[index];
+  memcpy (dst, vertex, sizeof (canary_draw_vertex_t));
+
   return index;
 }
 
+size_t
+canary_draw_list_vertex_count (canary_draw_list_t *draw_list)
+{
+  return draw_list->vertices.size;
+}
+
+canary_draw_vertex_t *
+canary_draw_list_vertex_buffer (canary_draw_list_t *draw_list)
+{
+  return draw_list->vertices.vals;
+}
+
+size_t
+canary_draw_list_index_count (canary_draw_list_t *draw_list)
+{
+  return draw_list->indices.size;
+}
+
+canary_draw_index_t *
+canary_draw_list_index_buffer (canary_draw_list_t *draw_list)
+{
+  return draw_list->indices.vals;
+}
+
 void
-canary_draw_triangle (canary_draw_list_t *draw_list, canary_draw_index_t vertex1,
-                      canary_draw_index_t vertex2, canary_draw_index_t vertex3)
+canary_draw_triangle (canary_draw_list_t *draw_list,
+                      canary_draw_index_t vertex1, canary_draw_index_t vertex2,
+                      canary_draw_index_t vertex3)
 {
   const mdo_allocator_t *alloc = draw_list->alloc;
 
