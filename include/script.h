@@ -91,4 +91,4 @@ canary_panel_t *canary_script_lookup_panel (canary_script_t *,
  * @param coords
  */
 void canary_script_on_input (canary_script_t *, canary_panel_key_t,
-                             canary_input_event_t, float[2]);
+                             canary_input_event_t, const float[2]);

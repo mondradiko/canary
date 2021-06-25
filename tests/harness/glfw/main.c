@@ -10,11 +10,67 @@
 #include "panel.h"
 #include "script.h"
 
+typedef struct window_userdata_s
+{
+  canary_script_t *script;
+  canary_panel_t *panel;
+  canary_panel_key_t panel_key;
+} window_userdata_t;
+
 static int
 log_error (const char *message)
 {
   fprintf (stderr, "%s\n", message);
   return -1;
+}
+
+static void
+send_input_event (GLFWwindow *window, canary_input_event_t event)
+{
+  window_userdata_t *userdata = glfwGetWindowUserPointer (window);
+
+  double cx;
+  double cy;
+  glfwGetCursorPos (window, &cx, &cy);
+
+  int width;
+  int height;
+  glfwGetWindowSize (window, &width, &height);
+
+  float coords[2];
+  coords[0] = (cx / width) * 2.0 - 1.0;
+  coords[1] = 1.0 - (cy / height) * 2.0;
+
+  canary_script_on_input (userdata->script, userdata->panel_key, event, coords);
+}
+
+static void
+cursor_position_callback (GLFWwindow *window, double xpos, double ypos)
+{
+  canary_input_event_t event;
+
+  if (glfwGetMouseButton (window, GLFW_MOUSE_BUTTON_LEFT))
+    event = CANARY_DRAG;
+  else
+    event = CANARY_HOVER;
+
+  send_input_event (window, event);
+}
+
+static void
+mouse_button_callback (GLFWwindow *window, int button, int action, int mods)
+{
+  if (button != GLFW_MOUSE_BUTTON_LEFT)
+    return;
+
+  canary_input_event_t event;
+
+  if (action)
+    event = CANARY_SELECT;
+  else
+    event = CANARY_DESELECT;
+
+  send_input_event (window, event);
 }
 
 int
@@ -30,6 +86,8 @@ run_harness (const char *filename)
   canary_panel_t *panel = NULL;
   gles_renderer_t *ren = NULL;
   canary_draw_list_t *draw_list = NULL;
+
+  window_userdata_t userdata;
 
   if (!glfwInit ())
     return log_error ("failed to init glfw");
@@ -98,6 +156,14 @@ run_harness (const char *filename)
       error_code = 1;
       goto error;
     }
+
+  userdata.script = script;
+  userdata.panel = panel;
+  userdata.panel_key = panel_key;
+
+  glfwSetWindowUserPointer (window, &userdata);
+  glfwSetCursorPosCallback (window, cursor_position_callback);
+  glfwSetMouseButtonCallback (window, mouse_button_callback);
 
   double last_tick = glfwGetTime ();
 

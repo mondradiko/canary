@@ -368,3 +368,42 @@ canary_script_lookup_panel (canary_script_t *script,
   /* TODO(marceline-cramer): bounds checking */
   return script->panels.vals[panel_key].panel;
 }
+
+void
+canary_script_on_input (canary_script_t *script, canary_panel_key_t panel_key,
+                        canary_input_event_t event, const float coords[2])
+{
+  const char *callback_name;
+  switch (event)
+    {
+    case CANARY_HOVER:
+      callback_name = "on_hover";
+      break;
+    case CANARY_SELECT:
+      callback_name = "on_select";
+      break;
+    case CANARY_DRAG:
+      callback_name = "on_drag";
+      break;
+    case CANARY_DESELECT:
+      callback_name = "on_deselect";
+      break;
+    default:
+        LOG_ERR ("unrecognized input event type");
+        return;
+    }
+
+  wasmtime_val_t args[3];
+
+  /* TODO(marceline-cramer): bounds checking */
+  args[0].kind = WASM_I32;
+  args[0].of.i32 = script->panels.vals[panel_key].userdata;
+
+  args[1].kind = WASM_F32;
+  args[1].of.f32 = coords[0];
+
+  args[2].kind = WASM_F32;
+  args[2].of.f32 = coords[1];
+
+  run_callback (script, callback_name, args, 3, NULL, 0);
+}
