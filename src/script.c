@@ -38,32 +38,26 @@ struct canary_script_s
   } panels;
 };
 
-static mdo_result_t
+static int
 log_wasmtime_error (canary_script_t *script, wasmtime_error_t *error)
 {
   wasm_byte_vec_t error_message;
   wasmtime_error_message (error, &error_message);
   wasmtime_error_delete (error);
-
-  mdo_result_t result = script->wasmtime_error;
-  mdo_result_t logged = LOG_RESULT (result, error_message.data);
+  LOG_ERR ("%.*s", error_message.size, error_message.data);
   wasm_byte_vec_delete (&error_message);
-
-  return logged;
+  return -1;
 }
 
-static mdo_result_t
+static int
 log_wasm_trap (canary_script_t *script, wasm_trap_t *trap)
 {
   wasm_byte_vec_t trap_message;
   wasm_trap_message (trap, &trap_message);
   wasm_trap_delete (trap);
-
-  mdo_result_t result = script->wasm_trap_error;
-  mdo_result_t logged = LOG_RESULT (result, trap_message.data);
+  LOG_ERR ("%.*s", trap_message.size, trap_message.data);
   wasm_byte_vec_delete (&trap_message);
-
-  return logged;
+  return -1;
 }
 
 static wasm_trap_t *
@@ -287,9 +281,10 @@ canary_script_new_trap (canary_script_t *script, const char *message)
   return wasmtime_trap_new (message, strlen (message));
 }
 
-static bool
-get_callback (canary_script_t *script, const char *symbol,
-              wasmtime_func_t *func)
+static int
+run_callback (canary_script_t *script, const char *symbol,
+              const wasmtime_val_t *args, size_t arg_num,
+              wasmtime_val_t *results, size_t result_num)
 {
   size_t symbol_len = strlen (symbol);
 
@@ -300,46 +295,40 @@ get_callback (canary_script_t *script, const char *symbol,
     {
 
       LOG_ERR ("could not find callback '%s'", symbol);
-      return false;
+      return -1;
     }
 
   if (exported.kind != WASMTIME_EXTERN_FUNC)
     {
       LOG_ERR ("export '%s' is not a function", symbol);
-      return false;
+      return -1;
     }
 
-  *func = exported.of.func;
+  wasm_trap_t *trap = NULL;
+  wasmtime_error_t *error
+      = wasmtime_func_call (script->context, &exported.of.func, args, arg_num,
+                            results, result_num, &trap);
 
-  return true;
+  if (error)
+    return log_wasmtime_error (script, error);
+
+  if (trap)
+    return log_wasm_trap (script, trap);
+
+  return 0;
 }
 
 void
 canary_script_update (canary_script_t *script, float dt)
 {
-  wasmtime_func_t update_cb;
-  if (!get_callback (script, "update", &update_cb))
-    {
-      LOG_RESULT (script->wasmtime_error, "couldn't get update callback");
-      return;
-    }
-
   wasmtime_val_t dt_arg;
   dt_arg.kind = WASM_F32;
   dt_arg.of.f32 = dt;
 
-  wasm_trap_t *trap = NULL;
-  wasmtime_error_t *error = wasmtime_func_call (script->context, &update_cb,
-                                                &dt_arg, 1, NULL, 0, &trap);
-
-  if (error)
-    log_wasmtime_error (script, error);
-
-  if (trap)
-    log_wasm_trap (script, trap);
+  run_callback (script, "update", &dt_arg, 1, NULL, 0);
 }
 
-mdo_result_t
+int
 canary_script_bind_panel (canary_script_t *script, canary_panel_t *panel,
                           canary_panel_key_t *panel_key)
 {
@@ -349,29 +338,19 @@ canary_script_bind_panel (canary_script_t *script, canary_panel_t *panel,
 
   entry->panel = panel;
 
-  wasmtime_func_t bind_panel_cb;
-  if (!get_callback (script, "bind_panel", &bind_panel_cb))
-    return LOG_RESULT (script->wasmtime_error,
-                       "couldn't get bind_panel callback");
-
   wasmtime_val_t args[]
       = { { .kind = WASM_I32, .of = { .i32 = *panel_key } } };
 
   wasmtime_val_t results[1];
 
-  wasm_trap_t *trap = NULL;
-  wasmtime_error_t *error = wasmtime_func_call (
-      script->context, &bind_panel_cb, args, 1, results, 1, &trap);
-
-  if (error)
-    return log_wasmtime_error (script, error);
-
-  if (trap)
-    return log_wasm_trap (script, trap);
+  if (run_callback (script, "bind_panel", args, 1, results, 1))
+    {
+      LOG_ERR ("couldn't run bind_panel callback");
+      return -1;
+    }
 
   entry->userdata = results[0].of.i32;
-
-  return MDO_SUCCESS;
+  return 0;
 }
 
 void

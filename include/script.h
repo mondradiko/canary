@@ -65,9 +65,9 @@ void canary_script_update (canary_script_t *, float);
  * @param script
  * @param panel
  * @param panel_key
- * @return #mdo_result_t.
+ * @return Zero on success.
  */
-mdo_result_t canary_script_bind_panel (canary_script_t *, canary_panel_t *,
+int canary_script_bind_panel (canary_script_t *, canary_panel_t *,
                                        canary_panel_key_t *);
 
 /** @function canary_script_unbind_panel
