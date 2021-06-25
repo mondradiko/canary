@@ -68,7 +68,7 @@ size_t canary_draw_list_vertex_count (canary_draw_list_t *);
  * @param ui_draw
  * @return A pointer to the vertex buffer in the list.
  */
-canary_draw_vertex_t *canary_draw_vertex_buffer (canary_draw_list_t *);
+canary_draw_vertex_t *canary_draw_list_vertex_buffer (canary_draw_list_t *);
 
 /** @function canary_draw_list_index_count
  * @param ui_draw
