@@ -18,7 +18,7 @@ if (BUILD_GLES_RENDERER)
 endif ()
 
 if (ENABLE_GLFW_HARNESS)
-  find_package (glfw3 3.3 REQUIRED)
+  find_package (glfw3 3.2 REQUIRED)
 
   add_executable (test-harness-glfw harness/glfw/main.c)
 
