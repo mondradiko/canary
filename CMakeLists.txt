@@ -27,13 +27,18 @@ mondradiko_setup_library (canary CANARY_OBJ
   src/script.c
 )
 
-target_link_libraries (${CANARY_OBJ}
+set (CANARY_LIBS
   mondradiko::mdo-utils
   wasmtime::wasmtime
   Threads::Threads
   ${CMAKE_DL_LIBS}
-  m
 )
+
+if (UNIX)
+  list (APPEND CANARY_LIBS m)
+endif()
+
+target_link_libraries (${CANARY_OBJ} ${CANARY_LIBS})
 
 target_include_directories (${CANARY_OBJ} PUBLIC lib)
 
